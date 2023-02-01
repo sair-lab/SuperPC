@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.DS_Store
+/playgrounds
+/logs*
+
+
+# Personal logs
+logs_ae/
+logs_gen/
