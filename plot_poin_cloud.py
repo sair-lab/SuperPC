@@ -5,10 +5,10 @@ import open3d as o3d
 # data = np.load('/home/jared/Downloads/bunny/data/bun045.ply')
 
 # path = os.getcwd() + '/results/AE_Ours_hospitalRGB_1673560411'
-path = './results/AE_Ours_hospitalRGB_1674796547'
+path = './results/Unet_TwoBranch_room'
 data1 = np.load(path + '/out.npy')
 # depth_raw = o3d.geometry.Image((data))
-frame11 = data1[18, :]
+frame11 = data1[0, :]
 print(data1.shape)
 print(frame11.shape)
 pcd1 = o3d.geometry.PointCloud()
@@ -17,7 +17,7 @@ pcd1.colors = o3d.utility.Vector3dVector(frame11[:, 3:])
 
 
 data2 = np.load(path + '/ref.npy')
-frame21 = data2[18, :]
+frame21 = data2[0, :]
 # print(frame21.shape)
 pcd2 = o3d.geometry.PointCloud()
 pcd2.points = o3d.utility.Vector3dVector(frame21[:, :3])

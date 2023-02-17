@@ -94,13 +94,13 @@ class PointNetEncoder(nn.Module):
         self.model = models.resnet50(pretrained=True)
         #self.model.load_state_dict(torch.load('./model/resnet50-19c8e357.pth')) # Turn pretrained to False then load the parameters locally to save time
         self.model.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.model.fc = nn.Linear(2048, 1024)
-        self.model.fc_bn = nn.BatchNorm1d(1024)
+        self.model.fc = nn.Linear(2048, zdim)
+        self.model.fc_bn = nn.BatchNorm1d(zdim)
 
 
         # -----------------Fusion MLP-----------------
         # Fusion two latent codes together
-        self.fc1_con = torch.nn.Linear(2048,1024)  # convert ResNet50 Latent code from 2048 to 1024
+        self.fc1_con = torch.nn.Linear(2*zdim, zdim)  # convert ResNet50 Latent code from 2048 to 1024
 
         
 
@@ -145,9 +145,9 @@ class PointNetEncoder(nn.Module):
 
 
         # ----------------------------------Fusion MLP----------------------------------
-        # MLP to combine the two code and make the dimensions equal to 256
-        m = torch.cat([m1, m2], dim=-1) # (B, 1024+1024)
-        m = self.fc1_con(m) # convert ResNet50 Latent code from 2048 to 1024
+        # MLP to combine the two code and make the dimensions equal to zdim
+        m = torch.cat([m1, m2], dim=-1) # (B, zdim+zdim)
+        m = self.fc1_con(m) # convert ResNet50 Latent code from 2*zdim to zdim
 
 
         # Returns both mean and logvariance, just ignore the latter in deteministic cases.

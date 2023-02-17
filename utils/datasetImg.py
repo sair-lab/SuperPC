@@ -10,10 +10,11 @@ from PIL import Image
 
 class ImageNetCore(Dataset):
     
-    def __init__(self, split, transform=None):
+    def __init__(self, path, split, transform=None):
         super().__init__()
         assert split in ('train', 'val', 'test')
         self.split = split
+        self.path = path
         self.transform = transform
         self.imgs = []
 
@@ -23,10 +24,10 @@ class ImageNetCore(Dataset):
     def load(self):
 
         def _enumerate_image():
-            imgsDir = './PtsDataFunc/imagedata_small/' + self.split
+            imgsDir = self.path + '/' + self.split
             imgList = os.listdir(imgsDir)
             for j, imgName in enumerate(imgList):
-                imgPath = './PtsDataFunc/imagedata_small/' + self.split + '/' + imgName
+                imgPath = self.path + '/' + self.split + '/' + imgName
                 img = Image.open(imgPath)
                 transform = transforms.Compose([
                     transforms.PILToTensor()

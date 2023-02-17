@@ -21,10 +21,11 @@ parser.add_argument('--categories', type=str_list, default=['hospitalRGB'])
 parser.add_argument('--save_dir', type=str, default='./results')
 parser.add_argument('--device', type=str, default='cuda')
 # Datasets and loaders
-parser.add_argument('--dataset_path', type=str, default='./data/shapenet_overfit_flip.hdf5')
+parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_50000pts.hdf5')
+parser.add_argument('--datasetImg_path', type=str, default='./PtsDataFunc/imagedata_large')
 # parser.add_argument('--batch_size', type=int, default=128) # orignial
 # parser.add_argument('--batch_size', type=int, default=8) # poits /40; 30 frames for training; 10 frames for testing
-parser.add_argument('--batch_size', type=int, default=2) # poits /20; 30 frames for training; 10 frames for testing
+parser.add_argument('--batch_size', type=int, default=1) # poits /20; 30 frames for training; 10 frames for testing
 args = parser.parse_args()
 
 # Logging
@@ -51,6 +52,7 @@ test_loader = DataLoader(test_dset, batch_size=args.batch_size, num_workers=0)
 
 # Datasets and loaders (Images)
 test_dset_img = ImageNetCore(
+    path = args.datasetImg_path,
     split='test',
 )
 test_iter_img = get_data_iterator(DataLoader(

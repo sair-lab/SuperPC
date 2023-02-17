@@ -24,7 +24,7 @@ import os
 # Arguments
 parser = argparse.ArgumentParser()
 # Model arguments
-parser.add_argument('--latent_dim', type=int, default=1024)
+parser.add_argument('--latent_dim', type=int, default=64)
 parser.add_argument('--num_steps', type=int, default=200)
 parser.add_argument('--beta_1', type=float, default=1e-4)
 parser.add_argument('--beta_T', type=float, default=0.05)
@@ -35,7 +35,8 @@ parser.add_argument('--resume', type=str, default=None)
 parser.add_argument('--resume_iters', type=int, default=0)
 
 # Datasets and loaders
-parser.add_argument('--dataset_path', type=str, default='./data/shapenet_overfit_flip.hdf5')
+parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_50000pts.hdf5')
+parser.add_argument('--datasetImg_path', type=str, default='./PtsDataFunc/imagedata_small')
 parser.add_argument('--categories', type=str_list, default=['hospitalRGB'])
 parser.add_argument('--scale_mode', type=str, default='shape_unit')
 # parser.add_argument('--train_batch_size', type=int, default=128) # original
@@ -43,7 +44,7 @@ parser.add_argument('--scale_mode', type=str, default='shape_unit')
 # parser.add_argument('--train_batch_size', type=int, default=32) # poits /40; 30 frames for training; 10 frames for testing
 # parser.add_argument('--val_batch_size', type=int, default=8)# poits /40; 30 frames for training; 10 frames for testing
 parser.add_argument('--train_batch_size', type=int, default=8) # poits /20; 30 frames for training; 10 frames for testing
-parser.add_argument('--val_batch_size', type=int, default=2)# poits /20; 30 frames for training; 10 frames for testing
+parser.add_argument('--val_batch_size', type=int, default=1)# poits /20; 30 frames for training; 10 frames for testing
 parser.add_argument('--rotate', type=eval, default=False, choices=[True, False])
 
 # Optimizer and scheduler
@@ -60,12 +61,12 @@ parser.add_argument('--logging', type=eval, default=True, choices=[True, False])
 parser.add_argument('--log_root', type=str, default='./logs_ae')
 parser.add_argument('--device', type=str, default='cuda')
 # parser.add_argument('--max_iters', type=int, default=float('inf'))
-parser.add_argument('--max_iters', type=int, default=1800000)
+parser.add_argument('--max_iters', type=int, default=18000000)
 parser.add_argument('--val_freq', type=float, default=1000)
 parser.add_argument('--tag', type=str, default=None)
 parser.add_argument('--num_val_batches', type=int, default=-1)
 parser.add_argument('--num_inspect_batches', type=int, default=1)
-parser.add_argument('--num_inspect_pointclouds', type=int, default=4)
+parser.add_argument('--num_inspect_pointclouds', type=int, default=1)
 args = parser.parse_args()
 seed_all(args.seed)
 
@@ -110,10 +111,12 @@ val_loader = DataLoader(val_dset, batch_size=args.val_batch_size, num_workers=0)
 
 # Datasets and loaders (Images)
 train_dset_img = ImageNetCore(
+    path = args.datasetImg_path,
     split='train',
     transform=transform,
 )
 val_dset_img = ImageNetCore(
+    path = args.datasetImg_path,
     split='val',
     transform=transform,
 )
@@ -192,10 +195,13 @@ def validate_loss(it):
     all_refs = []
     all_recons = []
     for i, batch in enumerate(tqdm(val_loader, desc='Validate')):
+        # iterate the batch of the images
         batch_img = next(val_iter_img)
         if args.num_val_batches > 0 and i >= args.num_val_batches:
             break
+        # Load image
         ref_img = batch_img['image'].to(args.device).float()
+        # Load point cloud
         ref = batch['pointcloud'].to(args.device).float()
         shift = batch['shift'].to(args.device)
         scale = batch['scale'].to(args.device)
@@ -222,18 +228,28 @@ def validate_inspect(it):
     sum_n = 0
     sum_chamfer = 0
     for i, batch in enumerate(tqdm(val_loader, desc='Inspect')):
-        batch_img = next(val_iter_img)
+        # Load point cloud
         x = batch['pointcloud'].to(args.device).float()
+        shift = batch['shift'].to(args.device)
+        scale = batch['scale'].to(args.device)
+
+        # Load image
+        batch_img = next(val_iter_img)
         img = batch_img['image'].to(args.device).float()
+
         model.eval()
         code = model.encode(x, img)
-        recons = model.decode(code, x.size(1), flexibility=args.flexibility).detach()
+        recons = model.decode(code, 2*x.size(1), flexibility=args.flexibility).detach()
+        # Remap the generated pointcloud xyz and RGB to original map
+        recons = recons * scale + shift
+        vertices = recons[:args.num_inspect_pointclouds, :, :3]
+        colors = torch.round(255*recons[:args.num_inspect_pointclouds, :, 3:]).type(torch.int)
 
         sum_n += x.size(0)
         if i >= args.num_inspect_batches:
             break   # Inspect only 5 batch
 
-    writer.add_mesh('val/pointcloud', recons[:args.num_inspect_pointclouds], global_step=it)
+    writer.add_mesh('val/pointcloud', vertices, colors, global_step=it)
     writer.flush()
 
 
