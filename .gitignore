@@ -136,3 +136,4 @@ dmypy.json
 # Personal logs
 logs_ae/
 logs_gen/
+wandb/

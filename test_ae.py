@@ -22,7 +22,7 @@ parser.add_argument('--save_dir', type=str, default='./results')
 parser.add_argument('--device', type=str, default='cuda')
 # Datasets and loaders
 parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_50000pts.hdf5')
-parser.add_argument('--datasetImg_path', type=str, default='./PtsDataFunc/imagedata_large')
+parser.add_argument('--datasetImg_path', type=str, default='./PtsDataFunc/imagedata_small')
 # parser.add_argument('--batch_size', type=int, default=128) # orignial
 # parser.add_argument('--batch_size', type=int, default=8) # poits /40; 30 frames for training; 10 frames for testing
 parser.add_argument('--batch_size', type=int, default=1) # poits /20; 30 frames for training; 10 frames for testing
@@ -75,12 +75,18 @@ for i, batch in enumerate(tqdm(test_loader)):
     img = batch_img['image'].to(args.device).float()
     # Load point cloud
     ref = batch['pointcloud'].to(args.device).float()
+    # Downsampling the GT to input point cloud
+    PtsNum_ori = ref.size(dim=1)
+    input_num_points = int(ref.size(dim=1)/10)
+    pcd_sameNum_list = list(np.linspace(0, PtsNum_ori-1, input_num_points).round().astype(int))
+    ref_input = ref[:, pcd_sameNum_list, :]
+    # ref = ref[]
     shift = batch['shift'].to(args.device)
     scale = batch['scale'].to(args.device)
     model.eval()
     with torch.no_grad():
         code = model.encode(ref, img)
-        recons = model.decode(code, 2*ref.size(1), flexibility=ckpt['args'].flexibility).detach()
+        recons = model.decode(code, ref.size(1), flexibility=ckpt['args'].flexibility).detach()
 
     ref = ref * scale + shift
     recons = recons * scale + shift
