@@ -109,39 +109,40 @@ class PointNetEncoder(nn.Module):
 
     def forward(self, x, img):
         # -----------------Shape Latent Code from PointNet-----------------
-        x = x.transpose(1, 2)
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        x = self.bn4(self.conv4(x))
-        x = torch.max(x, 2, keepdim=True)[0]
-        x = x.view(-1, 512)
+                                                   # ([8, 52000, 6])
+        x = x.transpose(1, 2)                      # ([8, 6, 52000])
+        x = F.relu(self.bn1(self.conv1(x)))        # ([8, 128, 52000])
+        x = F.relu(self.bn2(self.conv2(x)))        # ([8, 128, 52000])
+        x = F.relu(self.bn3(self.conv3(x)))        # ([8, 256, 52000])
+        x = self.bn4(self.conv4(x))                # ([8, 512, 52000])
+        x = torch.max(x, 2, keepdim=True)[0]       # ([8, 512, 1])
+        x = x.view(-1, 512)                        # ([8, 512])
 
-        m1 = F.relu(self.fc_bn1_m(self.fc1_m(x)))
-        m1 = F.relu(self.fc_bn2_m(self.fc2_m(m1)))
-        m1 = F.relu(self.fc_bn3_m(self.fc3_m(m1)))
+        m1 = F.relu(self.fc_bn1_m(self.fc1_m(x)))  # ([8, 256])
+        m1 = F.relu(self.fc_bn2_m(self.fc2_m(m1))) # ([8, 128])
+        m1 = F.relu(self.fc_bn3_m(self.fc3_m(m1))) # ([8, 64])
         # m1 = self.fc3_m(m1) # 256 dimension
         v = F.relu(self.fc_bn1_v(self.fc1_v(x)))
         v = F.relu(self.fc_bn2_v(self.fc2_v(v)))
-        v = F.relu(self.fc_bn3_m(self.fc3_m(v)))
+        v = F.relu(self.fc_bn3_v(self.fc3_v(v)))
         # v = self.fc3_v(v)
 
 
         # -----------------Image Latent Code from ResNet50-----------------
-        img = self.model.conv1(img)
-        img = self.model.bn1(img)
-        img = self.model.relu(img)
-        img = self.model.maxpool(img)
-        img = self.model.layer1(img)
-        img = self.model.layer2(img)
-        img = self.model.layer3(img)
-        img = self.model.layer4(img)
-        img = self.model.avgpool(img)
-        img = img.view(img.size(0), -1)
+        img = self.model.conv1(img)    # ([8, 64, 240, 320])
+        img = self.model.bn1(img)      # ([8, 64, 240, 320])
+        img = self.model.relu(img)     # ([8, 64, 240, 320])
+        img = self.model.maxpool(img)  # ([8, 64, 120, 160])
+        img = self.model.layer1(img)   # ([8, 256, 120, 160])
+        img = self.model.layer2(img)   # ([8, 512, 60, 80])
+        img = self.model.layer3(img)   # ([8, 1024, 30, 40])
+        img = self.model.layer4(img)   # ([8, 2048, 15, 20])
+        img = self.model.avgpool(img)  # ([8, 2048, 1, 1])
+        img = img.view(img.size(0), -1)# ([8, 2048])
         # m2 = self.model.fc(img)
         # m2 = self.model.fc_bn(m2)
         # m2 = F.relu(m2)
-        m2 = F.relu(self.model.fc_bn(self.model.fc(img)))
+        m2 = F.relu(self.model.fc_bn(self.model.fc(img))) # ([8, 64])
 
 
         # ----------------------------------Fusion MLP----------------------------------

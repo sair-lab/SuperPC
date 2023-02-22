@@ -44,6 +44,7 @@ from torch.nn import Module
 
 from .encoders import *
 from .diffusion import *
+import open3d as o3d
 
 
 class AutoEncoder(Module):
@@ -75,6 +76,12 @@ class AutoEncoder(Module):
         return self.diffusion.sample(num_points, code, flexibility=flexibility, ret_traj=ret_traj)
 
     def get_loss(self, x, img):
-        code = self.encode(x, img)
+        PtsNum_ori = x.size(dim=1)
+        input_num_points = int(x.size(dim=1)/10)
+        pcd_sameNum_list = list(np.linspace(0, PtsNum_ori-1, input_num_points).round().astype(int))
+        x_input = x[:, pcd_sameNum_list, :]
+       
+        code = self.encode(x_input, img)
+        # code = self.encode(x, img)
         loss = self.diffusion.get_loss(x, code)
         return loss
