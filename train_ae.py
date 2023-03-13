@@ -36,8 +36,9 @@ parser.add_argument('--resume', type=str, default=None)
 parser.add_argument('--resume_iters', type=int, default=0)
 
 # Datasets and loaders
-parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_50000pts.hdf5')
-parser.add_argument('--datasetImg_path', type=str, default='./PtsDataFunc/imagedata_small')
+parser.add_argument('--input_downsample', type=int, default=10)
+parser.add_argument('--dataset_path', type=str, default='/user/yidu/projects/yidu/super_map/super_map_point_based_one_branch/data/shapenet_oneTraj_50000pts.hdf5')
+parser.add_argument('--datasetImg_path', type=str, default='/user/yidu/projects/yidu/super_map/super_map_point_based_two_branch/PtsDataFunc/imagedata_small')
 parser.add_argument('--categories', type=str_list, default=['hospitalRGB'])
 parser.add_argument('--scale_mode', type=str, default='shape_unit')
 # parser.add_argument('--train_batch_size', type=int, default=128) # original
@@ -56,6 +57,10 @@ parser.add_argument('--end_lr', type=float, default=1e-4)
 parser.add_argument('--sched_start_epoch', type=int, default=150*THOUSAND)
 parser.add_argument('--sched_end_epoch', type=int, default=300*THOUSAND)
 
+# wandb config
+parser.add_argument('--run_name', type=str, default='TwoBranch')
+parser.add_argument('--project_name', type=str, default='Super-Map-Project')
+
 # Training
 parser.add_argument('--seed', type=int, default=2020)
 parser.add_argument('--logging', type=eval, default=True, choices=[True, False])
@@ -73,7 +78,7 @@ seed_all(args.seed)
 
 # Logging
 if args.logging:
-    log_dir = get_new_log_dir(args.log_root, prefix='AE_', postfix='_' + args.tag if args.tag is not None else '')
+    log_dir = get_new_log_dir(args, args.log_root, prefix='AE_', postfix='_' + args.tag if args.tag is not None else '')
     logger = get_logger('train', log_dir)
     writer = torch.utils.tensorboard.SummaryWriter(log_dir)
     ckpt_mgr = CheckpointManager(log_dir)
@@ -210,7 +215,7 @@ def validate_loss(it):
         ref = batch['pointcloud'].to(args.device).float()
         # Downsampling the GT to input point cloud
         PtsNum_ori = ref.size(dim=1)
-        input_num_points = int(ref.size(dim=1)/10)
+        input_num_points = int(ref.size(dim=1)/args.input_downsample)
         pcd_sameNum_list = list(np.linspace(0, PtsNum_ori-1, input_num_points).round().astype(int))
         ref_input = ref[:, pcd_sameNum_list, :]
 
@@ -248,7 +253,7 @@ def validate_inspect(it):
         scale = batch['scale'].to(args.device)
         # Downsample the GT to the input point cloud
         PtsNum_ori = x.size(dim=1)
-        input_num_points = int(x.size(dim=1)/10)
+        input_num_points = int(x.size(dim=1)/args.input_downsample)
         pcd_sameNum_list = list(np.linspace(0, PtsNum_ori-1, input_num_points).round().astype(int))
         x_input = x[:, pcd_sameNum_list, :]
 
@@ -272,7 +277,7 @@ def validate_inspect(it):
     writer.flush()
 
     # wandb save point cloud
-    points = torch.Tensor.numpy(torch.Tensor.cpu(torch.cat((vertices, colors), dim=2)))
+    points = torch.Tensor.numpy(torch.Tensor.cpu(torch.cat((-vertices, colors), dim=2)))
     wandb.log({"point_scene": wandb.Object3D(points[0])})
 
 
@@ -280,8 +285,8 @@ def validate_inspect(it):
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project = "Super-Map-Project-LargeDataset",
-    name = "wandbTest",
+    project = args.project_name,
+    name = args.run_name + '-latenDim' + str(args.latent_dim) + '-inputDownsample' + str(args.input_downsample) + '_' + datetime.datetime.now().strftime("%Y_%m_%d_%Hh%Mm"),
     
     # track hyperparameters and run metadata
     config = {
@@ -301,7 +306,7 @@ wandb.init(
 # path = './plot_save/' + timeSt
 # os.makedirs(path)
 # Set the point cloud saving iteration inspection point
-iters_inspect = (np.linspace(1, 36, 36).astype(int)**2)*3000
+iters_inspect = (np.linspace(1, 36, 36).astype(int)**2)*3000 + args.resume_iters
 # Main loop
 logger.info('Start training...')
 try:
