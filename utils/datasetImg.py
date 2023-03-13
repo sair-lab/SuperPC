@@ -56,3 +56,71 @@ class ImageNetCore(Dataset):
             data = self.transform(data)
         return data
 
+
+
+
+
+# ------------------------------------------------ Large Dataset - AllEnvs Version
+# import os
+# import random
+# from copy import copy
+# import torch
+# import torchvision.transforms as transforms
+# from torch.utils.data import Dataset
+# import numpy as np
+# from PIL import Image
+
+
+# class ImageNetCore(Dataset):
+    
+#     def __init__(self, path, split, transform=None):
+#         super().__init__()
+#         assert split in ('train', 'val', 'test')
+#         self.split = split
+#         self.path = path
+#         self.transform = transform
+#         self.imgs = []
+
+#         self.load()
+
+
+#     def load(self):
+        
+#         def _enumerate_image():
+#             imgsDir_pre = self.path
+#             f = open('./data/image_path/' + self.split + '.txt', mode='r')
+#             lines = f.readlines()  # 以行的形式进行读取文件
+#             imgsDir_post_list = []
+#             for i in range(len(lines)):
+#                 imgsDir_post_list.append(lines[i].strip())
+
+#             for j, imgsDir_post in enumerate(imgsDir_post_list):
+#                 imgPath = imgsDir_pre + '/' + imgsDir_post
+#                 img = Image.open(imgPath)
+#                 transform = transforms.Compose([
+#                     transforms.PILToTensor()
+#                 ])
+#                 img_tensor = transform(img)
+#                 yield img_tensor, j
+        
+#         for img, img_id in _enumerate_image():
+#             self.imgs.append({
+#                 'image': img,
+#                 'id': img_id,
+#             })
+
+            
+
+#         # Deterministically shuffle the dataset
+#         self.imgs.sort(key=lambda data: data['id'], reverse=False)
+#         random.Random(2020).shuffle(self.imgs)
+
+#     def __len__(self):
+#         return len(self.imgs)
+
+#     def __getitem__(self, idx):
+#         data = {k:v.clone() if isinstance(v, torch.Tensor) else copy(v) for k, v in self.imgs[idx].items()}
+#         if self.transform is not None:
+#             data = self.transform(data)
+#         return data
+

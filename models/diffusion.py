@@ -48,7 +48,48 @@ class VarianceSchedule(Module):
         sigmas = self.sigmas_flex[t] * flexibility + self.sigmas_inflex[t] * (1 - flexibility)
         return sigmas
 
+# # Original PointwiseNet
+# class PointwiseNet(Module):
 
+#     def __init__(self, point_dim, context_dim, residual):
+#         super().__init__()
+#         self.act = F.leaky_relu
+#         self.residual = residual
+#         self.layers = ModuleList([
+#             ConcatSquashLinear(6, 256, context_dim+3),
+#             ConcatSquashLinear(256, 512, context_dim+3),
+#             ConcatSquashLinear(512, 2048, context_dim+3),
+#             ConcatSquashLinear(2048, 512, context_dim+3),
+#             ConcatSquashLinear(512, 256, context_dim+3),
+#             ConcatSquashLinear(256, 6, context_dim+3)
+#         ])
+
+#     def forward(self, x, beta, context):
+#         """
+#         Args:
+#             x:  Point clouds at some timestep t, (B, N, d).
+#             beta:     Time. (B, ).
+#             context:  Shape latents. (B, F).
+#         """
+#         batch_size = x.size(0)
+#         beta = beta.view(batch_size, 1, 1)          # (B, 1, 1)
+#         context = context.view(batch_size, 1, -1)   # (B, 1, F)
+ 
+#         time_emb = torch.cat([beta, torch.sin(beta), torch.cos(beta)], dim=-1)  # (B, 1, 3)
+#         ctx_emb = torch.cat([time_emb, context], dim=-1)    # (B, 1, F+3)
+
+#         out = x
+#         for i, layer in enumerate(self.layers):
+#             out = layer(ctx=ctx_emb, x=out)
+#             if i < len(self.layers) - 1:
+#                 out = self.act(out)
+
+#         if self.residual:
+#             return x + out
+#         else:
+#             return out
+
+# Attention-based skip-connection PointwiseNet
 class PointwiseNet(Module):
 
     def __init__(self, point_dim, context_dim, residual):
@@ -56,15 +97,25 @@ class PointwiseNet(Module):
         self.act = F.leaky_relu
         self.residual = residual
         self.layers = ModuleList([
-            ConcatSquashLinear(6, 128, context_dim+3),
-            ConcatSquashLinear(128, 256, context_dim+3),
+            ConcatSquashLinear(6, 256, context_dim+3),
             ConcatSquashLinear(256, 512, context_dim+3),
+            ConcatSquashLinear(512, 2048, context_dim+3),
+            ConcatSquashLinear(2048, 512, context_dim+3),
             ConcatSquashLinear(512, 256, context_dim+3),
-            ConcatSquashLinear(256, 128, context_dim+3),
-            ConcatSquashLinear(128, 6, context_dim+3)
+            ConcatSquashLinear(256, 6, context_dim+3)
         ])
 
-    def forward(self, x, beta, context):
+        # Fully-connected layers for the feature map concatate
+        self.layers_fc = ModuleList([
+            torch.nn.Linear(512, 256),
+            torch.nn.Linear(1024, 512),
+            torch.nn.Linear(4096, 2048),
+            torch.nn.Linear(1024, 512),
+            torch.nn.Linear(512, 256)
+        ])
+
+
+    def forward(self, x, beta, context, fmap_skips):
         """
         Args:
             x:  Point clouds at some timestep t, (B, N, d).
@@ -74,13 +125,21 @@ class PointwiseNet(Module):
         batch_size = x.size(0)
         beta = beta.view(batch_size, 1, 1)          # (B, 1, 1)
         context = context.view(batch_size, 1, -1)   # (B, 1, F)
-
+ 
         time_emb = torch.cat([beta, torch.sin(beta), torch.cos(beta)], dim=-1)  # (B, 1, 3)
         ctx_emb = torch.cat([time_emb, context], dim=-1)    # (B, 1, F+3)
 
+        fmap_skips.append(fmap_skips[1])
+        fmap_skips.append(fmap_skips[0])
         out = x
         for i, layer in enumerate(self.layers):
             out = layer(ctx=ctx_emb, x=out)
+            # Skip-connection
+            if i <= 5-1: 
+                out = torch.cat((out, fmap_skips[i]), dim=-1)
+                fc_layer = self.layers_fc[i]
+                out = fc_layer(out)
+            # Leaky-relu
             if i < len(self.layers) - 1:
                 out = self.act(out)
 
@@ -90,6 +149,8 @@ class PointwiseNet(Module):
             return out
 
 
+
+
 class DiffusionPoint(Module):
 
     def __init__(self, net, var_sched:VarianceSchedule):
@@ -97,7 +158,7 @@ class DiffusionPoint(Module):
         self.net = net
         self.var_sched = var_sched
 
-    def get_loss(self, x_0, context, t=None):
+    def get_loss(self, x_0, context, fmap_skips, t=None):
         """
         Args:
             x_0:  Input point cloud, (B, N, d).
@@ -113,12 +174,12 @@ class DiffusionPoint(Module):
         c1 = torch.sqrt(1 - alpha_bar).view(-1, 1, 1)   # (B, 1, 1)
 
         e_rand = torch.randn_like(x_0)  # (B, N, d)
-        e_theta = self.net(c0 * x_0 + c1 * e_rand, beta=beta, context=context)
+        e_theta = self.net(c0 * x_0 + c1 * e_rand, beta=beta, context=context, fmap_skips=fmap_skips)
 
         loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
         return loss
 
-    def sample(self, num_points, context, point_dim=6, flexibility=0.0, ret_traj=False):
+    def sample(self, num_points, context, fmap_skips, point_dim=6, flexibility=0.0, ret_traj=False):
         batch_size = context.size(0)
         x_T = torch.randn([batch_size, num_points, point_dim]).to(context.device)
         traj = {self.var_sched.num_steps: x_T}
@@ -133,7 +194,7 @@ class DiffusionPoint(Module):
 
             x_t = traj[t]
             beta = self.var_sched.betas[[t]*batch_size]
-            e_theta = self.net(x_t, beta=beta, context=context)
+            e_theta = self.net(x_t, beta=beta, context=context, fmap_skips=fmap_skips)
             x_next = c0 * (x_t - c1 * e_theta) + sigma * z
             traj[t-1] = x_next.detach()     # Stop gradient and save trajectory.
             traj[t] = traj[t].cpu()         # Move previous output to CPU memory.

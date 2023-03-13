@@ -24,14 +24,18 @@ class FlowVAE(Module):
             )
         )
 
-    def get_loss(self, x, kl_weight, writer=None, it=None):
+    def get_loss(self, x, img, kl_weight, writer=None, it=None):
         """
         Args:
             x:  Input point clouds, (B, N, d).
         """
         batch_size, _, _ = x.size()
+        PtsNum_ori = x.size(dim=1)
+        input_num_points = int(x.size(dim=1)/self.args.input_downsample)
+        pcd_sameNum_list = list(np.linspace(0, PtsNum_ori-1, input_num_points).round().astype(int))
+        x_input = x[:, pcd_sameNum_list, :]
         # print(x.size())
-        z_mu, z_sigma = self.encoder(x)
+        z_mu, z_sigma = self.encoder(x_input, img)
         z = reparameterize_gaussian(mean=z_mu, logvar=z_sigma)  # (B, F)
         
         # H[Q(z|X)]
@@ -69,3 +73,15 @@ class FlowVAE(Module):
         z = self.flow(w, reverse=True).view(batch_size, -1)
         samples = self.diffusion.sample(num_points, context=z, flexibility=flexibility)
         return samples
+
+    def encode(self, x, img):
+        """
+        Args:
+            x:  Point clouds to be encoded, (B, N, d).
+            img: Images to be encoded, (B, H, W)
+        """
+        code, _ = self.encoder(x, img)
+        return code
+
+    def decode(self, code, num_points, flexibility=0.0, ret_traj=False):
+        return self.diffusion.sample(num_points, code, flexibility=flexibility, ret_traj=ret_traj)

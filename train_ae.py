@@ -25,7 +25,7 @@ import os
 # Arguments
 parser = argparse.ArgumentParser()
 # Model arguments
-parser.add_argument('--latent_dim', type=int, default=64)
+parser.add_argument('--latent_dim', type=int, default=2048)
 parser.add_argument('--num_steps', type=int, default=200)
 parser.add_argument('--beta_1', type=float, default=1e-4)
 parser.add_argument('--beta_T', type=float, default=0.05)
@@ -36,15 +36,18 @@ parser.add_argument('--resume', type=str, default=None)
 parser.add_argument('--resume_iters', type=int, default=0)
 
 # Datasets and loaders
-parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_50000pts.hdf5')
-parser.add_argument('--datasetImg_path', type=str, default='./PtsDataFunc/imagedata_small')
+parser.add_argument('--input_downsample', type=int, default=2)
+# parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/data/tartanair_allEnvs.hdf5') # Tartanair allEnvs
+parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_20000pts.hdf5')
+# parser.add_argument('--datasetImg_path', type=str, default='/home/jared/Large_datasets/TartanAir/data_image') # Tartanair allEnvs
+parser.add_argument('--datasetImg_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/PtsDataFunc/imagedata_small')
 parser.add_argument('--categories', type=str_list, default=['hospitalRGB'])
 parser.add_argument('--scale_mode', type=str, default='shape_unit')
 # parser.add_argument('--train_batch_size', type=int, default=128) # original
 # parser.add_argument('--val_batch_size', type=int, default=32) # original
 # parser.add_argument('--train_batch_size', type=int, default=32) # poits /40; 30 frames for training; 10 frames for testing
 # parser.add_argument('--val_batch_size', type=int, default=8)# poits /40; 30 frames for training; 10 frames for testing
-parser.add_argument('--train_batch_size', type=int, default=8) # poits /20; 30 frames for training; 10 frames for testing
+parser.add_argument('--train_batch_size', type=int, default=2) # poits /20; 30 frames for training; 10 frames for testing
 parser.add_argument('--val_batch_size', type=int, default=1)# poits /20; 30 frames for training; 10 frames for testing
 parser.add_argument('--rotate', type=eval, default=False, choices=[True, False])
 
@@ -55,6 +58,10 @@ parser.add_argument('--max_grad_norm', type=float, default=10)
 parser.add_argument('--end_lr', type=float, default=1e-4)
 parser.add_argument('--sched_start_epoch', type=int, default=150*THOUSAND)
 parser.add_argument('--sched_end_epoch', type=int, default=300*THOUSAND)
+
+# wandb config
+parser.add_argument('--run_name', type=str, default='Attention-TwoBranch')
+parser.add_argument('--project_name', type=str, default='Super-Map-Project-SmallDataset')
 
 # Training
 parser.add_argument('--seed', type=int, default=2020)
@@ -73,7 +80,8 @@ seed_all(args.seed)
 
 # Logging
 if args.logging:
-    log_dir = get_new_log_dir(args.log_root, prefix='AE_', postfix='_' + args.tag if args.tag is not None else '')
+    # log_dir = get_new_log_dir(args.log_root, prefix='AE_', postfix='_' + args.tag if args.tag is not None else '')
+    log_dir = get_new_log_dir(args, args.log_root, prefix='AE_', postfix='_' + args.tag if args.tag is not None else '')
     logger = get_logger('train', log_dir)
     writer = torch.utils.tensorboard.SummaryWriter(log_dir)
     ckpt_mgr = CheckpointManager(log_dir)
@@ -160,8 +168,8 @@ scheduler = get_linear_scheduler(
 )
 
 # Train, validate 
-def train(it, train_loss):
-    # Load data
+def train(it):
+    # Load point cloud data
     batch = next(train_iter)
     x = batch['pointcloud'].to(args.device).float()
 
@@ -191,9 +199,6 @@ def train(it, train_loss):
     # wandb save
     wandb.log({"iters": it,"train-loss": loss, "train-lr": optimizer.param_groups[0]['lr'], "train-grad_norm": orig_grad_norm})
 
-    train_loss.append(loss.item())
-    
-    return train_loss
 
 def validate_loss(it):
 
@@ -210,7 +215,7 @@ def validate_loss(it):
         ref = batch['pointcloud'].to(args.device).float()
         # Downsampling the GT to input point cloud
         PtsNum_ori = ref.size(dim=1)
-        input_num_points = int(ref.size(dim=1)/10)
+        input_num_points = int(ref.size(dim=1)/args.input_downsample)
         pcd_sameNum_list = list(np.linspace(0, PtsNum_ori-1, input_num_points).round().astype(int))
         ref_input = ref[:, pcd_sameNum_list, :]
 
@@ -218,8 +223,8 @@ def validate_loss(it):
         scale = batch['scale'].to(args.device)
         with torch.no_grad():
             model.eval()
-            code = model.encode(ref_input, ref_img)
-            recons = model.decode(code, ref.size(1), flexibility=args.flexibility)
+            code, fmap_skips = model.encode(ref_input, ref_img)
+            recons = model.decode(code, fmap_skips, ref.size(1), flexibility=args.flexibility)
         all_refs.append(ref * scale + shift)
         all_recons.append(recons * scale + shift)
 
@@ -248,7 +253,7 @@ def validate_inspect(it):
         scale = batch['scale'].to(args.device)
         # Downsample the GT to the input point cloud
         PtsNum_ori = x.size(dim=1)
-        input_num_points = int(x.size(dim=1)/10)
+        input_num_points = int(x.size(dim=1)/args.input_downsample)
         pcd_sameNum_list = list(np.linspace(0, PtsNum_ori-1, input_num_points).round().astype(int))
         x_input = x[:, pcd_sameNum_list, :]
 
@@ -257,8 +262,8 @@ def validate_inspect(it):
         img = batch_img['image'].to(args.device).float()
 
         model.eval()
-        code = model.encode(x_input, img)
-        recons = model.decode(code, x.size(1), flexibility=args.flexibility).detach()
+        code, fmap_skips = model.encode(x_input, img)
+        recons = model.decode(code, fmap_skips, x.size(1), flexibility=args.flexibility).detach()
         # Remap the generated pointcloud xyz and RGB to original map
         recons = recons * scale + shift
         vertices = recons[:args.num_inspect_pointclouds, :, :3]
@@ -272,7 +277,7 @@ def validate_inspect(it):
     writer.flush()
 
     # wandb save point cloud
-    points = torch.Tensor.numpy(torch.Tensor.cpu(torch.cat((vertices, colors), dim=2)))
+    points = torch.Tensor.numpy(torch.Tensor.cpu(torch.cat((-vertices, colors), dim=2)))
     wandb.log({"point_scene": wandb.Object3D(points[0])})
 
 
@@ -280,8 +285,8 @@ def validate_inspect(it):
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    project = "Super-Map-Project-LargeDataset",
-    name = "wandbTest",
+    project = args.project_name,
+    name = args.run_name + '-latenDim' + str(args.latent_dim) + '-inputDownsample' + str(args.input_downsample) + '_' + datetime.datetime.now().strftime("%Y_%m_%d_%Hh%Mm"),
     
     # track hyperparameters and run metadata
     config = {
@@ -296,12 +301,11 @@ wandb.init(
 
 
 # # For saving datas to analyze
-# train_loss = []
 # timeSt = datetime.datetime.now().strftime("%Y_%m_%d_%Hh%Mm")
 # path = './plot_save/' + timeSt
 # os.makedirs(path)
 # Set the point cloud saving iteration inspection point
-iters_inspect = (np.linspace(1, 36, 36).astype(int)**2)*3000
+iters_inspect = (np.linspace(1, 36, 36).astype(int)**2)*1000 + args.resume_iters
 # Main loop
 logger.info('Start training...')
 try:
@@ -311,7 +315,7 @@ try:
         it = 1  
     train_loss = []
     while it <= args.max_iters:
-        train_loss = train(it,train_loss)
+        train(it)
         if it % args.val_freq == 0 or it == args.max_iters:
             with torch.no_grad():
                 cd_loss = validate_loss(it)
@@ -321,7 +325,8 @@ try:
                 'optimizer': optimizer.state_dict(),
                 'scheduler': scheduler.state_dict(),
             }
-            ckpt_mgr.save(model, args, cd_loss, opt_states, step=it)
+            if any(it == iters_inspect):
+                ckpt_mgr.save(model, args, cd_loss, opt_states, step=it)
             
             # # Save plot of iter vs loss
             # plt.plot(np.array(train_loss))
@@ -337,4 +342,6 @@ try:
 except KeyboardInterrupt:
     # Save the point cloud generated by the latest model
     validate_inspect(it)
+    cd_loss = validate_loss(it)
+    ckpt_mgr.save(model, args, cd_loss, opt_states, step=it)
     logger.info('Terminating...')
