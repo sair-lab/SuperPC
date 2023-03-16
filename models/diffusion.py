@@ -110,8 +110,8 @@ class PointwiseNet(Module):
             torch.nn.Linear(512, 256),
             torch.nn.Linear(1024, 512),
             torch.nn.Linear(4096, 2048),
-            torch.nn.Linear(1024, 512),
-            torch.nn.Linear(512, 256)
+            # torch.nn.Linear(1024, 512),
+            # torch.nn.Linear(512, 256)
         ])
 
 
@@ -135,7 +135,7 @@ class PointwiseNet(Module):
         for i, layer in enumerate(self.layers):
             out = layer(ctx=ctx_emb, x=out)
             # Skip-connection
-            if i <= 5-1: 
+            if i <= 3-1: 
                 out = torch.cat((out, fmap_skips[i]), dim=-1)
                 fc_layer = self.layers_fc[i]
                 out = fc_layer(out)

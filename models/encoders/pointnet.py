@@ -588,29 +588,32 @@ class PointNetEncoder(nn.Module):
         img_skip3 = img_skip3.view((img_skip3.shape[0], img_skip3.shape[1], -1))   # ([B, 2048, 15*20=300])
 
         # Form query, key and value
-        # q1 = self.Wq1(x_skip1).transpose(2, 1)   # transpose: ([B, 256, 52000])   --> ([B, 52000, 256])
-        # k1 = self.Wk1(img_skip1)                 #            ([B, 256, 19200])  
-        # v1 = self.Wv1(img_skip1).transpose(2, 1) # transpose: ([B, 256, 19200])   --> ([B, 19200, 256])
+        q1 = self.Wq1(x_skip1.transpose(2, 1))   # transpose: ([B, 256, 52000])   --> ([B, 52000, 256])
+        k1 = self.Wk1(img_skip1.transpose(2, 1)) # transpose: ([B, 256, 19200])   --> ([B, 19200, 256])
+        k1 = k1.transpose(2, 1) #                  transpose: ([B, 19200, 256])   --> ([B, 256, 19200])
+        v1 = self.Wv1(img_skip1.transpose(2, 1)) # transpose: ([B, 256, 19200])   --> ([B, 19200, 256])
 
-        # q2 = self.Wq2(x_skip2).transpose(2, 1)   # transpose: ([B, 512, 52000])   --> ([B, 52000, 512])
-        # k2 = self.Wk2(img_skip2)                 #            ([B, 512, 4800]) 
-        # v2 = self.Wv2(img_skip2).transpose(2, 1) # transpose: ([B, 512, 4800])    --> ([B, 4800, 512])
+        q2 = self.Wq2(x_skip2.transpose(2, 1))   # transpose: ([B, 512, 52000])   --> ([B, 52000, 512])
+        k2 = self.Wk2(img_skip2.transpose(2, 1)) # transpose: ([B, 512, 19200])   --> ([B, 19200, 512])
+        k2 = k2.transpose(2, 1) #                  transpose: ([B, 19200, 512])   --> ([B, 512, 19200])
+        v2 = self.Wv2(img_skip2.transpose(2, 1)) # transpose: ([B, 512, 19200])   --> ([B, 19200, 512])
 
-        # q3 = self.Wq3(x_skip3).transpose(2, 1)   # transpose: ([B, 2048, 52000])  --> ([B, 52000, 2048])
-        # k3 = self.Wk3(img_skip3)                 #            ([B, 2048, 300])
-        # v3 = self.Wv3(img_skip3).transpose(2, 1) # transpose: ([B, 2048, 300])    --> ([B, 300, 2048])
+        q3 = self.Wq3(x_skip3.transpose(2, 1))   # transpose: ([B, 2048, 52000])   --> ([B, 52000, 2048])
+        k3 = self.Wk3(img_skip3.transpose(2, 1)) # transpose: ([B, 2048, 19200])   --> ([B, 19200, 2048])
+        k3 = k3.transpose(2, 1) #                  transpose: ([B, 19200, 2048])   --> ([B, 2048, 19200])
+        v3 = self.Wv3(img_skip3.transpose(2, 1)) # transpose: ([B, 2048, 19200])   --> ([B, 19200, 2048])
 
-        q1 = x_skip1.transpose(2, 1)   # transpose: ([B, 256, 52000])   --> ([B, 52000, 256])
-        k1 = img_skip1                 #            ([B, 256, 19200])  
-        v1 = img_skip1.transpose(2, 1) # transpose: ([B, 256, 19200])   --> ([B, 19200, 256])
+        # q1 = x_skip1.transpose(2, 1)   # transpose: ([B, 256, 52000])   --> ([B, 52000, 256])
+        # k1 = img_skip1                 #            ([B, 256, 19200])  
+        # v1 = img_skip1.transpose(2, 1) # transpose: ([B, 256, 19200])   --> ([B, 19200, 256])
 
-        q2 = x_skip2.transpose(2, 1)   # transpose: ([B, 512, 52000])   --> ([B, 52000, 512])
-        k2 = img_skip2                 #            ([B, 512, 4800]) 
-        v2 = img_skip2.transpose(2, 1) # transpose: ([B, 512, 4800])    --> ([B, 4800, 512])
+        # q2 = x_skip2.transpose(2, 1)   # transpose: ([B, 512, 52000])   --> ([B, 52000, 512])
+        # k2 = img_skip2                 #            ([B, 512, 4800]) 
+        # v2 = img_skip2.transpose(2, 1) # transpose: ([B, 512, 4800])    --> ([B, 4800, 512])
 
-        q3 = x_skip3.transpose(2, 1)   # transpose: ([B, 2048, 52000])  --> ([B, 52000, 2048])
-        k3 = img_skip3                 #            ([B, 2048, 300])
-        v3 = img_skip3.transpose(2, 1) # transpose: ([B, 2048, 300])    --> ([B, 300, 2048])
+        # q3 = x_skip3.transpose(2, 1)   # transpose: ([B, 2048, 52000])  --> ([B, 52000, 2048])
+        # k3 = img_skip3                 #            ([B, 2048, 300])
+        # v3 = img_skip3.transpose(2, 1) # transpose: ([B, 2048, 300])    --> ([B, 300, 2048])
 
         # Calculate W attention weights
         w1 = torch.bmm(q1, k1)   # ([B, 52000, 19200])
