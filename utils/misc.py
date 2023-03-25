@@ -2,7 +2,6 @@ import os
 import torch
 import numpy as np
 import random
-import time
 import datetime
 import logging
 import logging.handlers
@@ -132,9 +131,11 @@ def get_logger(name, log_dir=None):
     return logger
 
 
-def get_new_log_dir(root='./logs', postfix='', prefix=''):
+# def get_new_log_dir(root='./logs', postfix='', prefix=''):
+def get_new_log_dir(argsinfo, root='./logs', postfix='', prefix=''):
     timeSt = datetime.datetime.now().strftime("%Y_%m_%d_%Hh%Mm")
-    log_dir = os.path.join(root, prefix + timeSt + postfix)
+    # log_dir = os.path.join(root, prefix + timeSt + postfix)
+    log_dir = os.path.join(root, prefix + timeSt + postfix + '_' + argsinfo.run_name + '_latentDim' + str(argsinfo.latent_dim) + '_inputDownsample' + str(argsinfo.input_downsample))
     os.makedirs(log_dir)
     return log_dir
 

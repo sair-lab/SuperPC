@@ -1,5 +1,7 @@
 *
 !.gitignore
-!briefly_view_PtsCloud.py
-!PtsCloud_process_save_as_hdf5.py
-!RGBD2PointCloud.py
+
+P000
+imagedata_small 
+imagedata_large
+__pycache__
