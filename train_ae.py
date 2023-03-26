@@ -60,7 +60,7 @@ parser.add_argument('--sched_start_epoch', type=int, default=150*THOUSAND)
 parser.add_argument('--sched_end_epoch', type=int, default=300*THOUSAND)
 
 # wandb config
-parser.add_argument('--run_name', type=str, default='Attention-TwoBranch')
+parser.add_argument('--run_name', type=str, default='Original-TwoBranch')
 parser.add_argument('--project_name', type=str, default='Super-Map-Project-SmallDataset')
 
 # Training

@@ -48,7 +48,10 @@ class VarianceSchedule(Module):
         sigmas = self.sigmas_flex[t] * flexibility + self.sigmas_inflex[t] * (1 - flexibility)
         return sigmas
 
-# # Original PointwiseNet
+
+
+
+# # Original PointwiseNet - Large Latent Dimension
 # class PointwiseNet(Module):
 
 #     def __init__(self, point_dim, context_dim, residual):
@@ -89,7 +92,10 @@ class VarianceSchedule(Module):
 #         else:
 #             return out
 
-# Attention-based skip-connection PointwiseNet
+
+
+
+# Original PointwiseNet - Small Latent Dimension
 class PointwiseNet(Module):
 
     def __init__(self, point_dim, context_dim, residual):
@@ -97,25 +103,15 @@ class PointwiseNet(Module):
         self.act = F.leaky_relu
         self.residual = residual
         self.layers = ModuleList([
-            ConcatSquashLinear(6, 256, context_dim+3),
+            ConcatSquashLinear(6, 128, context_dim+3),
+            ConcatSquashLinear(128, 256, context_dim+3),
             ConcatSquashLinear(256, 512, context_dim+3),
-            ConcatSquashLinear(512, 2048, context_dim+3),
-            ConcatSquashLinear(2048, 512, context_dim+3),
             ConcatSquashLinear(512, 256, context_dim+3),
-            ConcatSquashLinear(256, 6, context_dim+3)
+            ConcatSquashLinear(256, 128, context_dim+3),
+            ConcatSquashLinear(128, 6, context_dim+3)
         ])
 
-        # Fully-connected layers for the feature map concatate
-        self.layers_fc = ModuleList([
-            torch.nn.Linear(512, 256),
-            torch.nn.Linear(1024, 512),
-            torch.nn.Linear(4096, 2048),
-            # torch.nn.Linear(1024, 512),
-            # torch.nn.Linear(512, 256)
-        ])
-
-
-    def forward(self, x, beta, context, fmap_skips):
+    def forward(self, x, beta, context):
         """
         Args:
             x:  Point clouds at some timestep t, (B, N, d).
@@ -129,17 +125,9 @@ class PointwiseNet(Module):
         time_emb = torch.cat([beta, torch.sin(beta), torch.cos(beta)], dim=-1)  # (B, 1, 3)
         ctx_emb = torch.cat([time_emb, context], dim=-1)    # (B, 1, F+3)
 
-        fmap_skips.append(fmap_skips[1])
-        fmap_skips.append(fmap_skips[0])
         out = x
         for i, layer in enumerate(self.layers):
             out = layer(ctx=ctx_emb, x=out)
-            # Skip-connection
-            if i <= 3-1: 
-                out = torch.cat((out, fmap_skips[i]), dim=-1)
-                fc_layer = self.layers_fc[i]
-                out = fc_layer(out)
-            # Leaky-relu
             if i < len(self.layers) - 1:
                 out = self.act(out)
 
