@@ -103,6 +103,7 @@ class PointNetEncoder(nn.Module):
 
         # v = torch.cat([v, m2], dim=-1) # (B, zdim+zdim)
         # v = self.fc1_con(v) # convert ResNet50 Latent code from 2*zdim to zdim
+        v = 0
 
 
         # Returns both mean and logvariance, just ignore the latter in deteministic cases.

@@ -146,7 +146,7 @@ class DiffusionPoint(Module):
         self.net = net
         self.var_sched = var_sched
 
-    def get_loss(self, x_0, context, fmap_skips, t=None):
+    def get_loss(self, x_0, context, t=None):
         """
         Args:
             x_0:  Input point cloud, (B, N, d).
@@ -162,12 +162,12 @@ class DiffusionPoint(Module):
         c1 = torch.sqrt(1 - alpha_bar).view(-1, 1, 1)   # (B, 1, 1)
 
         e_rand = torch.randn_like(x_0)  # (B, N, d)
-        e_theta = self.net(c0 * x_0 + c1 * e_rand, beta=beta, context=context, fmap_skips=fmap_skips)
+        e_theta = self.net(c0 * x_0 + c1 * e_rand, beta=beta, context=context)
 
         loss = F.mse_loss(e_theta.view(-1, point_dim), e_rand.view(-1, point_dim), reduction='mean')
         return loss
 
-    def sample(self, num_points, context, fmap_skips, point_dim=6, flexibility=0.0, ret_traj=False):
+    def sample(self, num_points, context, point_dim=6, flexibility=0.0, ret_traj=False):
         batch_size = context.size(0)
         x_T = torch.randn([batch_size, num_points, point_dim]).to(context.device)
         traj = {self.var_sched.num_steps: x_T}
@@ -182,7 +182,7 @@ class DiffusionPoint(Module):
 
             x_t = traj[t]
             beta = self.var_sched.betas[[t]*batch_size]
-            e_theta = self.net(x_t, beta=beta, context=context, fmap_skips=fmap_skips)
+            e_theta = self.net(x_t, beta=beta, context=context)
             x_next = c0 * (x_t - c1 * e_theta) + sigma * z
             traj[t-1] = x_next.detach()     # Stop gradient and save trajectory.
             traj[t] = traj[t].cpu()         # Move previous output to CPU memory.
