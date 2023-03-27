@@ -4,6 +4,7 @@ from torch.nn import Module, Parameter, ModuleList
 import numpy as np
 
 from .common import *
+from .encoders import *
 
 
 class VarianceSchedule(Module):
