@@ -21,8 +21,8 @@ parser.add_argument('--categories', type=str_list, default=['hospitalRGB'])
 parser.add_argument('--save_dir', type=str, default='./results')
 parser.add_argument('--device', type=str, default='cuda')
 # Datasets and loaders
-parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_50000pts.hdf5')
-parser.add_argument('--datasetImg_path', type=str, default='./PtsDataFunc/imagedata_small')
+parser.add_argument('--dataset_path', type=str, default='/user/yidu/projects/yidu/super_map/super_map_point_based_one_branch/data/shapenet_oneTraj_50000pts.hdf5')
+parser.add_argument('--datasetImg_path', type=str, default='/user/yidu/projects/yidu/super_map/super_map_point_based_two_branch/PtsDataFunc/imagedata_small')
 # parser.add_argument('--batch_size', type=int, default=128) # orignial
 # parser.add_argument('--batch_size', type=int, default=8) # poits /40; 30 frames for training; 10 frames for testing
 parser.add_argument('--batch_size', type=int, default=1) # poits /20; 30 frames for training; 10 frames for testing
