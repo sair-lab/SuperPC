@@ -15,8 +15,8 @@ class PointNetEncoder(nn.Module):
         self.zdim = zdim
         in_channel = 3 if normal_channel else 0
         self.normal_channel = normal_channel
-        self.sa1 = PointNetSetAbstractionMsg(512, [0.1, 0.2, 0.4], [16, 32, 128], in_channel,[[32, 32, 64], [64, 64, 128], [64, 96, 128]])
-        self.sa2 = PointNetSetAbstractionMsg(128, [0.2, 0.4, 0.8], [32, 64, 128], 320,[[64, 64, 128], [128, 128, 256], [128, 128, 256]])
+        self.sa1 = PointNetSetAbstractionMsg(4800, [0.1, 0.2, 0.4], [16, 32, 128], in_channel,[[32, 32, 64], [64, 64, 128], [64, 96, 128]])
+        self.sa2 = PointNetSetAbstractionMsg(300, [0.2, 0.4, 0.8], [32, 64, 128], 320,[[64, 64, 128], [128, 128, 256], [128, 128, 256]])
         self.sa3 = PointNetSetAbstraction(None, None, None, 640 + 3, [256, 512, 2048], True)
         self.fc1_m = nn.Linear(2048, zdim)
         self.fc_bn1_m = nn.BatchNorm1d(zdim)
@@ -41,16 +41,20 @@ class PointNetEncoder(nn.Module):
 
     def forward(self, x, img):
         # ----------------- Shape Latent Code from PointNet++ -----------------
-                                                   # ([8, 52000, 6])
-        x = x.transpose(1, 2)                      # ([8, 6, 52000])
-        x = F.relu(self.bn1(self.conv1(x)))        # ([8, 128, 52000])
-        x = F.relu(self.bn2(self.conv2(x)))        # ([8, 128, 52000])
-        x = F.relu(self.bn3(self.conv3(x)))        # ([8, 256, 52000])
-        x = self.bn4(self.conv4(x))                # ([8, 512, 52000])
-        x = torch.max(x, 2, keepdim=True)[0]       # ([8, 512, 1])
-        x = x.view(-1, 2048)                        # ([8, 512])
-
-        m1 = F.relu(self.fc_bn1_m(self.fc1_m(x)))  # ([8, 256])
+                                                   # ([B, 52000, 6])
+        x = x.transpose(1, 2)                      # ([B, 6, 52000])
+        if self.normal_channel:
+            norm = x[:, 3:, :]
+            xyz = x[:, :3, :]
+        else:
+            norm = None
+        l1_xyz, l1_points = self.sa1(xyz, norm)
+        l2_xyz, l2_points = self.sa2(l1_xyz, l1_points)
+        l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
+        x = l3_points.view(-1, 2048)                        # ([B, z_dim])
+        
+        # m1 = x                                              # ([B, z_dim])
+        m1 = F.relu(self.fc_bn1_m(self.fc1_m(x)))  # ([B, z_dim])
 
 
 

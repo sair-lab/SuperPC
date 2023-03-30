@@ -60,7 +60,7 @@ parser.add_argument('--sched_start_epoch', type=int, default=150*THOUSAND)
 parser.add_argument('--sched_end_epoch', type=int, default=300*THOUSAND)
 
 # wandb config
-parser.add_argument('--run_name', type=str, default='Original-TwoBranch')
+parser.add_argument('--run_name', type=str, default='Original-TwoBranch-PointNet2')
 parser.add_argument('--project_name', type=str, default='Super-Map-Project-SmallDataset')
 
 # Training
@@ -70,7 +70,7 @@ parser.add_argument('--log_root', type=str, default='./logs_ae')
 parser.add_argument('--device', type=str, default='cuda')
 # parser.add_argument('--max_iters', type=int, default=float('inf'))
 parser.add_argument('--max_iters', type=int, default=18000000)
-parser.add_argument('--val_freq', type=float, default=3)
+parser.add_argument('--val_freq', type=float, default=1000)
 parser.add_argument('--tag', type=str, default=None)
 parser.add_argument('--num_val_batches', type=int, default=-1)
 parser.add_argument('--num_inspect_batches', type=int, default=1)
