@@ -103,13 +103,25 @@ class PointwiseNet(Module):
         super().__init__()
         self.act = F.leaky_relu
         self.residual = residual
+         # PointNet++ layers
+        self.sa1 = PointNetSetAbstraction(1024, 0.1, 32, 6 + 3, [32, 64, 256], False)
+        self.sa2 = PointNetSetAbstraction(256, 0.2, 32, 256 + 3, [256, 256, 512], False)
+        self.sa3 = PointNetSetAbstraction(16, 0.8, 32, 512 + 3, [512, 512, 2048], False)
+        self.fp3 = PointNetFeaturePropagation(2048+512, [512, 512])
+        self.fp2 = PointNetFeaturePropagation(512+256, [512, 256])
+        self.fp1 = PointNetFeaturePropagation(256, [128, 6])
+        # self.conv1 = nn.Conv1d(128, 128, 1)
+        self.conv1 = nn.Conv1d(6, 6, 1)
+        self.bn1 = nn.BatchNorm1d(6)
+        
+        #concateSquashLinear Layers
         self.layers = ModuleList([
-            ConcatSquashLinear(6, 128, context_dim+3),
-            ConcatSquashLinear(128, 256, context_dim+3),
-            ConcatSquashLinear(256, 512, context_dim+3),
-            ConcatSquashLinear(512, 256, context_dim+3),
-            ConcatSquashLinear(256, 128, context_dim+3),
-            ConcatSquashLinear(128, 6, context_dim+3)
+            ConcatSquashLinear(6, 256, context_dim+3, pointNet2Layer = self.sa1),
+            ConcatSquashLinear(256, 512, context_dim+3, pointNet2Layer = self.sa2),
+            ConcatSquashLinear(512, 2048, context_dim+3, pointNet2Layer = self.sa3),
+            ConcatSquashLinearUp(2048, 512, context_dim+3, pointNet2Layer = self.fp3),
+            ConcatSquashLinearUp(512, 256, context_dim+3, pointNet2Layer = self.fp2),
+            ConcatSquashLinearUp(256, 6, context_dim+3, pointNet2Layer = self.fp1)
         ])
 
     def forward(self, x, beta, context):
@@ -127,15 +139,35 @@ class PointwiseNet(Module):
         ctx_emb = torch.cat([time_emb, context], dim=-1)    # (B, 1, F+3)
 
         out = x
+        out_xyz = x[:, :, :3]
+        out_list = [None]
+        out_xyz_list = [out_xyz]
         for i, layer in enumerate(self.layers):
-            out = layer(ctx=ctx_emb, x=out)
+            if 0 <= i <= 2:
+                out_xyz, out = layer(ctx=ctx_emb, out_xyz=out_xyz, x=out)
+                out_xyz_list.append(out_xyz)
+            else:
+                out_xyz = out_xyz_list[-(i-2)]
+                out_xyz_skip = out_xyz_list[-(i-2+1)]
+                out_skip = out_list[-(i-2+1)]
+                out = layer(ctx=ctx_emb, out_xyz_skip=out_xyz_skip, out_xyz=out_xyz, x_skip=out_skip, x=out)
+
+            # Leaky-relu
             if i < len(self.layers) - 1:
                 out = self.act(out)
+
+            if 0 <= i <= 2:
+                out_list.append(out)
+        
+        out = out.transpose(1, 2)
+        out = self.bn1(self.conv1(out))
+        out = out.transpose(1, 2)
 
         if self.residual:
             return x + out
         else:
             return out
+
 
 
 

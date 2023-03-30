@@ -21,9 +21,9 @@ class PointNetEncoder(nn.Module):
         # self.sa3 = PointNetSetAbstraction(None, None, None, 640 + 3, [256, 512, 2048], True)
         
         # Simplest implementation
-        self.sa1 = PointNetSetAbstraction(npoint=512, radius=0.2, nsample=32, in_channel=in_channel, mlp=[64, 64, 128], group_all=False)
-        self.sa2 = PointNetSetAbstraction(npoint=128, radius=0.4, nsample=64, in_channel=128 + 3, mlp=[128, 128, 512], group_all=False)
-        self.sa3 = PointNetSetAbstraction(npoint=None, radius=None, nsample=None, in_channel=512 + 3, mlp=[512, 1024, 2048], group_all=True)
+        self.sa1 = PointNetSetAbstraction(1024, 0.1, 32, 6 + 3, [32, 64, 256], False)
+        self.sa2 = PointNetSetAbstraction(256, 0.2, 32, 256 + 3, [256, 256, 512], False)
+        self.sa3 = PointNetSetAbstraction(16, 0.8, 32, 512 + 3, [512, 512, 2048], False)
         self.fc1_m = nn.Linear(2048, zdim)
         self.fc_bn1_m = nn.BatchNorm1d(zdim)
 
@@ -49,14 +49,14 @@ class PointNetEncoder(nn.Module):
         # ----------------- Shape Latent Code from PointNet++ -----------------
                                                    # ([B, 52000, 6])
         x = x.transpose(1, 2)                      # ([B, 6, 52000])
-        if self.normal_channel:
-            norm = x[:, 3:, :]
-            xyz = x[:, :3, :]
-        else:
-            norm = None
-        l1_xyz, l1_points = self.sa1(xyz, norm)
+
+        l0_points = x
+        l0_xyz = x[:,:3,:]
+
+        l1_xyz, l1_points = self.sa1(l0_xyz, l0_points)
         l2_xyz, l2_points = self.sa2(l1_xyz, l1_points)
         l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
+        l3_points = torch.max(l3_points, 2, keepdim=True)[0]
         x = l3_points.view(-1, 2048)                        # ([B, z_dim])
         
         # m1 = x                                              # ([B, z_dim])
