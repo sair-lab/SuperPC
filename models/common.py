@@ -35,19 +35,51 @@ def truncated_normal_(tensor, mean=0, std=1, trunc_std=2):
 
 
 class ConcatSquashLinear(Module):
-    def __init__(self, dim_in, dim_out, dim_ctx):
+    def __init__(self, dim_in, dim_out, dim_ctx, pointNet2Layer):
         super(ConcatSquashLinear, self).__init__()
-        self._layer = Linear(dim_in, dim_out)
+        self.pointNet2Layer = pointNet2Layer
+        # self._layer = Linear(dim_in, dim_out)
         self._hyper_bias = Linear(dim_ctx, dim_out, bias=False)
         self._hyper_gate = Linear(dim_ctx, dim_out)
 
-    def forward(self, ctx, x):
+    def forward(self, ctx, out_xyz, x):
         gate = torch.sigmoid(self._hyper_gate(ctx))
         bias = self._hyper_bias(ctx)
         # if x.dim() == 3:
         #     gate = gate.unsqueeze(1)
         #     bias = bias.unsqueeze(1)
-        ret = self._layer(x) * gate + bias
+        x = x.transpose(1, 2)
+        out_xyz = out_xyz.transpose(1, 2)
+        out_xyz, out = self.pointNet2Layer(out_xyz, x)
+        out = out.transpose(1, 2)
+        out_xyz = out_xyz.transpose(1, 2)
+        ret = out * gate + bias
+        return out_xyz, ret
+
+# Upsample
+class ConcatSquashLinearUp(Module):
+    def __init__(self, dim_in, dim_out, dim_ctx, pointNet2Layer):
+        super(ConcatSquashLinearUp, self).__init__()
+        self.pointNet2Layer = pointNet2Layer
+        # self._layer = Linear(dim_in, dim_out)
+        self._hyper_bias = Linear(dim_ctx, dim_out, bias=False)
+        self._hyper_gate = Linear(dim_ctx, dim_out)
+
+    def forward(self, ctx, out_xyz_skip, out_xyz, x_skip, x):
+        gate = torch.sigmoid(self._hyper_gate(ctx))
+        bias = self._hyper_bias(ctx)
+        # if x.dim() == 3:
+        #     gate = gate.unsqueeze(1)
+        #     bias = bias.unsqueeze(1)
+        if x_skip != None:
+            x_skip = x_skip.transpose(1, 2)
+        x = x.transpose(1, 2)
+        out_xyz_skip = out_xyz_skip.transpose(1, 2)
+        out_xyz = out_xyz.transpose(1, 2)
+        out = self.pointNet2Layer(out_xyz_skip, out_xyz, x_skip, x)
+        out = out.transpose(1, 2)
+        out_xyz = out_xyz.transpose(1, 2)
+        ret = out * gate + bias
         return ret
 
 

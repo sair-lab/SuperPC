@@ -6,6 +6,7 @@ from PIL import Image
 from torchvision import datasets, transforms
 from torchvision import models
 import copy
+from .pointnet2_utils import PointNetSetAbstractionMsg, PointNetSetAbstraction, PointNetFeaturePropagation
 
 
 class PointNetEncoder(nn.Module):
@@ -14,14 +15,25 @@ class PointNetEncoder(nn.Module):
         # -----------------PointNet encoder-----------------
         self.zdim = zdim
         self.input_downsample = input_downsample
-        self.conv1 = nn.Conv1d(input_dim, 128, 1)
-        self.conv2 = nn.Conv1d(128, 256, 1)
-        self.conv3 = nn.Conv1d(256, 512, 1)
-        self.conv4 = nn.Conv1d(512, 2048, 1)
-        self.bn1 = nn.BatchNorm1d(128)
-        self.bn2 = nn.BatchNorm1d(256)
-        self.bn3 = nn.BatchNorm1d(512)
-        self.bn4 = nn.BatchNorm1d(2048)
+
+        self.sa1 = PointNetSetAbstraction(1024, 0.1, 32, 6 + 3, [32, 64, 256], False)
+        self.sa2 = PointNetSetAbstraction(256, 0.2, 32, 256 + 3, [256, 256, 512], False)
+        self.sa3 = PointNetSetAbstraction(16, 0.8, 32, 512 + 3, [512, 512, 2048], False)
+        self.bn1 = nn.BatchNorm1d(256)
+        self.bn2 = nn.BatchNorm1d(512)
+        self.bn3 = nn.BatchNorm1d(2048)
+
+
+
+
+        # self.conv1 = nn.Conv1d(input_dim, 128, 1)
+        # self.conv2 = nn.Conv1d(128, 256, 1)
+        # self.conv3 = nn.Conv1d(256, 512, 1)
+        # self.conv4 = nn.Conv1d(512, 2048, 1)
+        # self.bn1 = nn.BatchNorm1d(128)
+        # self.bn2 = nn.BatchNorm1d(256)
+        # self.bn3 = nn.BatchNorm1d(512)
+        # self.bn4 = nn.BatchNorm1d(2048)
 
         # # Mapping to [c], cmean
         # self.fc1_m = nn.Linear(512, zdim)
@@ -75,15 +87,17 @@ class PointNetEncoder(nn.Module):
 
     def forward(self, x, img):
         # -----------------Shape Latent Code from PointNet-----------------
-        x_portion = x
-        for i in range(self.input_downsample-1):
-            x = torch.cat((x,x_portion), dim=1)
                                                    # ([B, 52000, 6])
         x = x.transpose(1, 2)                      # ([B, 6, 52000])
-        x = F.relu(self.bn1(self.conv1(x)))        # ([B, 128, 52000])
-        x_skip1 = F.relu(self.bn2(self.conv2(x)))        # ([B, 256, 52000])
-        x_skip2 = F.relu(self.bn3(self.conv3(x_skip1)))        # ([B, 512, 52000])
-        x_skip3 = self.bn4(self.conv4(x_skip2))                # ([B, 2048, 52000])
+
+        l0_points = x
+        l0_xyz = x[:,:3,:]
+
+        l1_xyz, l1_points = self.sa1(l0_xyz, l0_points)
+        l2_xyz, l2_points = self.sa2(l1_xyz, l1_points)
+        l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
+        x_skip1 = self.bn1(l1_points)        # ([B, 256, 52000])
+        x_skip3 = self.bn3(l3_points)                # ([B, 2048, 52000])
         # x = torch.max(x_skip3, 2, keepdim=True)[0]       # ([B, 2048, 1])
         # x = x.view(-1, 2048)                        # ([B, 2048])
 
@@ -128,10 +142,10 @@ class PointNetEncoder(nn.Module):
         k1 = k1.transpose(2, 1) #                  transpose: ([B, 19200, 256])   --> ([B, 256, 19200])
         v1 = self.Wv1(img_skip1.transpose(2, 1)) # transpose: ([B, 256, 19200])   --> ([B, 19200, 256])
 
-        q2 = self.Wq2(x_skip2.transpose(2, 1))   # transpose: ([B, 512, 52000])   --> ([B, 52000, 512])
-        k2 = self.Wk2(img_skip2.transpose(2, 1)) # transpose: ([B, 512, 19200])   --> ([B, 19200, 512])
-        k2 = k2.transpose(2, 1) #                  transpose: ([B, 19200, 512])   --> ([B, 512, 19200])
-        v2 = self.Wv2(img_skip2.transpose(2, 1)) # transpose: ([B, 512, 19200])   --> ([B, 19200, 512])
+        # q2 = self.Wq2(x_skip2.transpose(2, 1))   # transpose: ([B, 512, 52000])   --> ([B, 52000, 512])
+        # k2 = self.Wk2(img_skip2.transpose(2, 1)) # transpose: ([B, 512, 19200])   --> ([B, 19200, 512])
+        # k2 = k2.transpose(2, 1) #                  transpose: ([B, 19200, 512])   --> ([B, 512, 19200])
+        # v2 = self.Wv2(img_skip2.transpose(2, 1)) # transpose: ([B, 512, 19200])   --> ([B, 19200, 512])
 
         q3 = self.Wq3(x_skip3.transpose(2, 1))   # transpose: ([B, 2048, 52000])   --> ([B, 52000, 2048])
         k3 = self.Wk3(img_skip3.transpose(2, 1)) # transpose: ([B, 2048, 19200])   --> ([B, 19200, 2048])
@@ -156,11 +170,11 @@ class PointNetEncoder(nn.Module):
         # Calculate the attention values - the fused feature maps
         v_w1 = torch.bmm(w1, v1)   # ([B, 52000, 256])
 
-        # Calculate W attention weights
-        w2 = torch.bmm(q2, k2)   # ([B, 52000, 4800])
-        w2 = torch.softmax(w2, dim=1)
-        # Calculate the attention values - the fused feature maps
-        v_w2 = torch.bmm(w2, v2)   # ([B, 52000, 512])
+        # # Calculate W attention weights
+        # w2 = torch.bmm(q2, k2)   # ([B, 52000, 4800])
+        # w2 = torch.softmax(w2, dim=1)
+        # # Calculate the attention values - the fused feature maps
+        # v_w2 = torch.bmm(w2, v2)   # ([B, 52000, 512])
 
         # Calculate W attention weights
         w3 = torch.bmm(q3, k3)   # ([B, 52000, 300])
@@ -176,7 +190,7 @@ class PointNetEncoder(nn.Module):
         m = torch.max(v_w3, 1, keepdim=True)[0]       # ([B, 1, 2048])
         m = m.view(-1, 2048)                        # ([B, 2048])
         # save skip connection feature maps for the point branch
-        fmap_skips = [v_w1, v_w2, v_w3]
+        fmap_skips = [v_w1]
         # set a zero 
         v = 0
 
