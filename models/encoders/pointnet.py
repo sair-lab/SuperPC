@@ -13,11 +13,17 @@ class PointNetEncoder(nn.Module):
         super().__init__()
         # ----------------- PointNet++ encoder -----------------
         self.zdim = zdim
-        in_channel = 3 if normal_channel else 0
+        in_channel = 6 if normal_channel else 3
         self.normal_channel = normal_channel
-        self.sa1 = PointNetSetAbstractionMsg(4800, [0.1, 0.2, 0.4], [16, 32, 128], in_channel,[[32, 32, 64], [64, 64, 128], [64, 96, 128]])
-        self.sa2 = PointNetSetAbstractionMsg(300, [0.2, 0.4, 0.8], [32, 64, 128], 320,[[64, 64, 128], [128, 128, 256], [128, 128, 256]])
-        self.sa3 = PointNetSetAbstraction(None, None, None, 640 + 3, [256, 512, 2048], True)
+        # # With MSG approch 
+        # self.sa1 = PointNetSetAbstractionMsg(4800, [0.1, 0.2, 0.4], [16, 32, 128], in_channel,[[32, 32, 64], [64, 64, 128], [64, 96, 128]])
+        # self.sa2 = PointNetSetAbstractionMsg(300, [0.2, 0.4, 0.8], [32, 64, 128], 320,[[64, 64, 128], [128, 128, 256], [128, 128, 256]])
+        # self.sa3 = PointNetSetAbstraction(None, None, None, 640 + 3, [256, 512, 2048], True)
+        
+        # Simplest implementation
+        self.sa1 = PointNetSetAbstraction(npoint=512, radius=0.2, nsample=32, in_channel=in_channel, mlp=[64, 64, 128], group_all=False)
+        self.sa2 = PointNetSetAbstraction(npoint=128, radius=0.4, nsample=64, in_channel=128 + 3, mlp=[128, 128, 512], group_all=False)
+        self.sa3 = PointNetSetAbstraction(npoint=None, radius=None, nsample=None, in_channel=512 + 3, mlp=[512, 1024, 2048], group_all=True)
         self.fc1_m = nn.Linear(2048, zdim)
         self.fc_bn1_m = nn.BatchNorm1d(zdim)
 
