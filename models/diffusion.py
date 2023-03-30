@@ -134,11 +134,16 @@ class PointwiseNet(Module):
         out = x
         for i, layer in enumerate(self.layers):
             out = layer(ctx=ctx_emb, x=out)
-            # Skip-connection
-            if i <= 5-1: 
+            # Skip-connection: concatenate
+            if 3-1 <= i <= 5-1: 
                 out = torch.cat((out, fmap_skips[i]), dim=-1)
                 fc_layer = self.layers_fc[i]
                 out = fc_layer(out)
+
+            # # Skip-connection: add 
+            # if i <= 5-1: 
+            #     out = (out + fmap_skips[i])/2
+
             # Leaky-relu
             if i < len(self.layers) - 1:
                 out = self.act(out)

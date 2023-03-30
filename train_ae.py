@@ -38,9 +38,9 @@ parser.add_argument('--resume_iters', type=int, default=0)
 # Datasets and loaders
 parser.add_argument('--input_downsample', type=int, default=2)
 # parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/data/tartanair_allEnvs.hdf5') # Tartanair allEnvs
-parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_20000pts.hdf5')
+parser.add_argument('--dataset_path', type=str, default='/user/yidu/projects/yidu/super_map/super_map_point_based_one_branch/data/shapenet_oneTraj_20000pts.hdf5')
 # parser.add_argument('--datasetImg_path', type=str, default='/home/jared/Large_datasets/TartanAir/data_image') # Tartanair allEnvs
-parser.add_argument('--datasetImg_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/PtsDataFunc/imagedata_small')
+parser.add_argument('--datasetImg_path', type=str, default='/user/yidu/projects/yidu/super_map/super_map_point_based_two_branch/PtsDataFunc/imagedata_small')
 parser.add_argument('--categories', type=str_list, default=['hospitalRGB'])
 parser.add_argument('--scale_mode', type=str, default='shape_unit')
 # parser.add_argument('--train_batch_size', type=int, default=128) # original
