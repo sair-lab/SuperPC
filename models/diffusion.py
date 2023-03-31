@@ -160,9 +160,15 @@ class PointwiseNet(Module):
 
             # Skip-connection
             if i <= 1-1: 
-                out = torch.cat((out, fmap_skips[i]), dim=-1)
-                fc_layer = self.layers_fc[i]
-                out = fc_layer(out)
+                # concatenate
+                # out = torch.cat((out, fmap_skips[i]), dim=-1)
+                # fc_layer = self.layers_fc[i]
+                # out = fc_layer(out)
+
+                # add
+                out = out + fmap_skips[i]
+
+                
             # Leaky-relu
             if i < len(self.layers) - 1:
                 out = self.act(out)
