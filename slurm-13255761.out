@@ -1,0 +1,456 @@
+SLURM_JOBID=13255761
+SLURM_TIME=2023_03_31_13_54_12
+SLURM_JOB_NODELIST=cpn-v10-03
+SLURM_NNODES=1
+SLURMTMPDIR=/scratch/13255761
+working directory = /projects/academic/cwx/yidu/super_map/Super-map-Fusion-Head-Two-branch-Model
+
+Currently Loaded Modules:
+  1) python/sairlab-python
+
+ 
+
+/projects/academic/cwx/miniconda3/envs/supermap/bin/python
+/usr/bin/which: no pytest in (/projects/academic/cwx/miniconda3/envs/supermap/bin:/opt/software/slurm/bin:/projects/academic/cwx/miniconda3/condabin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/dell/srvadmin/bin:/user/yidu/.local/bin:/user/yidu/bin)
+Fri Mar 31 13:54:20 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 470.57.02    Driver Version: 470.57.02    CUDA Version: 11.4     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla V100-PCIE...  Off  | 00000000:3B:00.0 Off |                    0 |
+| N/A   29C    P0    24W / 250W |      0MiB / 32510MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   1  Tesla V100-PCIE...  Off  | 00000000:D8:00.0 Off |                    0 |
+| N/A   28C    P0    24W / 250W |      0MiB / 32510MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+#!/bin/sh
+################################### Start of SLRUM Script ###################################
+
+################################### Select your cluster ###################################
+###SBATCH --cluster=ub-hpc
+#SBATCH --cluster=faculty
+
+## Select your partition
+#SBATCH --partition=scavenger --qos=scavenger
+
+################################### Set your running time ###################################
+#SBATCH --time=48:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=8
+
+################################### Select your GPU ###################################
+## Use snodes command to check their status first
+#SBATCH --gres=gpu:tesla_v100-pcie-32gb:1
+##SBATCH --gres=gpu:tesla_v100-pcie-16gb:1
+###SBATCH --gres=gpu:a100-pcie-40gb:1
+
+
+################################### Set your memory ###################################
+#SBATCH --mem=32768
+# Memory per node specification is in MB. It is optional. 
+# The default limit is 3000MB per core.
+
+################################### Set your job name ###################################
+#SBATCH --job-name="super_map_simple_pointNet2_input_downsample_2_latent2048"
+
+## Set output name (not work very well right now)
+### SBATCH --output= "result_$(date +"%Y_%m_%d_%k_%M_%S").out"
+
+############################ Set the email to receive email #############################
+#SBATCH --mail-user=yidu@buffalo.edu
+#SBATCH --mail-type=ALL
+##SBATCH --requeue
+#Specifies that the job will be requeued after a node failure.
+#The default is that the job will not be requeued.
+
+
+################### Beginning of your scipt, it is written with shell ####################
+
+echo "SLURM_JOBID="$SLURM_JOBID
+echo "SLURM_TIME="$(date +"%Y_%m_%d_%k_%M_%S")
+
+echo "SLURM_JOB_NODELIST"=$SLURM_JOB_NODELIST
+echo "SLURM_NNODES"=$SLURM_NNODES
+echo "SLURMTMPDIR="$SLURMTMPDIR
+
+echo "working directory = "$SLURM_SUBMIT_DIR
+
+
+# module use /projects/academic/cwx/modulefiles
+# module load python/my-python-3
+source ~/.bashrc
+conda activate supermap
+
+## List the module your are using
+module list
+ulimit -s unlimited
+
+which python
+which pytest
+
+nvidia-smi
+
+
+cat simple_pointNet2_v100.script
+
+
+python train_ae.py --run_name 'OnlyPts-Original-TwoBranch-PointNet2' --project_name 'Super-Map-Project-SmallDataset'
+
+
+################################### End of SLRUM Script ###################################[2023-03-31 13:54:43,927::train::INFO] Namespace(beta_1=0.0001, beta_T=0.05, categories=['hospitalRGB'], datasetImg_path='/user/yidu/projects/yidu/super_map/super_map_point_based_two_branch/PtsDataFunc/imagedata_small', dataset_path='/user/yidu/projects/yidu/super_map/super_map_point_based_one_branch/data/shapenet_oneTraj_50000pts.hdf5', device='cuda', end_lr=0.0001, flexibility=0.0, input_downsample=2, latent_dim=2048, log_root='./logs_ae', logging=True, lr=0.001, max_grad_norm=10, max_iters=18000000, num_inspect_batches=1, num_inspect_pointclouds=1, num_steps=200, num_val_batches=-1, project_name='Super-Map-Project-SmallDataset', residual=True, resume=None, resume_iters=0, rotate=False, run_name='OnlyPts-Original-TwoBranch-PointNet2', scale_mode='shape_unit', sched_end_epoch=300000, sched_mode='linear', sched_start_epoch=150000, seed=2020, tag=None, train_batch_size=2, val_batch_size=1, val_freq=2000, weight_decay=0)
+[2023-03-31 13:54:43,928::train::INFO] Transform: None
+[2023-03-31 13:54:43,928::train::INFO] Loading datasets...
+[2023-03-31 13:54:51,923::train::INFO] Building model...
+/projects/academic/cwx/miniconda3/envs/supermap/lib/python3.7/site-packages/torchvision/models/_utils.py:209: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  f"The parameter '{pretrained_param}' is deprecated since 0.13 and may be removed in the future, "
+/projects/academic/cwx/miniconda3/envs/supermap/lib/python3.7/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=ResNet50_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet50_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+[2023-03-31 13:54:57,092::train::INFO] AutoEncoder(
+  (encoder): PointNetEncoder(
+    (sa1): PointNetSetAbstraction(
+      (mlp_convs): ModuleList(
+        (0): Conv2d(6, 64, kernel_size=(1, 1), stride=(1, 1))
+        (1): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1))
+        (2): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1))
+      )
+      (mlp_bns): ModuleList(
+        (0): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (sa2): PointNetSetAbstraction(
+      (mlp_convs): ModuleList(
+        (0): Conv2d(131, 128, kernel_size=(1, 1), stride=(1, 1))
+        (1): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+        (2): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1))
+      )
+      (mlp_bns): ModuleList(
+        (0): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (sa3): PointNetSetAbstraction(
+      (mlp_convs): ModuleList(
+        (0): Conv2d(515, 512, kernel_size=(1, 1), stride=(1, 1))
+        (1): Conv2d(512, 1024, kernel_size=(1, 1), stride=(1, 1))
+        (2): Conv2d(1024, 2048, kernel_size=(1, 1), stride=(1, 1))
+      )
+      (mlp_bns): ModuleList(
+        (0): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (fc1_m): Linear(in_features=2048, out_features=2048, bias=True)
+    (fc_bn1_m): BatchNorm1d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (model): ResNet(
+      (conv1): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+      (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (relu): ReLU(inplace=True)
+      (maxpool): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+      (layer1): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (layer2): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+            (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (3): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (layer3): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(512, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+            (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (3): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (4): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (5): Bottleneck(
+          (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (layer4): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(1024, 2048, kernel_size=(1, 1), stride=(2, 2), bias=False)
+            (1): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (avgpool): AdaptiveAvgPool2d(output_size=(1, 1))
+      (fc): Linear(in_features=2048, out_features=2048, bias=True)
+      (fc_bn): BatchNorm1d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    )
+    (fc1_con): Linear(in_features=4096, out_features=2048, bias=True)
+  )
+  (diffusion): DiffusionPoint(
+    (net): PointwiseNet(
+      (layers): ModuleList(
+        (0): ConcatSquashLinear(
+          (_layer): Linear(in_features=6, out_features=128, bias=True)
+          (_hyper_bias): Linear(in_features=2051, out_features=128, bias=False)
+          (_hyper_gate): Linear(in_features=2051, out_features=128, bias=True)
+        )
+        (1): ConcatSquashLinear(
+          (_layer): Linear(in_features=128, out_features=256, bias=True)
+          (_hyper_bias): Linear(in_features=2051, out_features=256, bias=False)
+          (_hyper_gate): Linear(in_features=2051, out_features=256, bias=True)
+        )
+        (2): ConcatSquashLinear(
+          (_layer): Linear(in_features=256, out_features=512, bias=True)
+          (_hyper_bias): Linear(in_features=2051, out_features=512, bias=False)
+          (_hyper_gate): Linear(in_features=2051, out_features=512, bias=True)
+        )
+        (3): ConcatSquashLinear(
+          (_layer): Linear(in_features=512, out_features=256, bias=True)
+          (_hyper_bias): Linear(in_features=2051, out_features=256, bias=False)
+          (_hyper_gate): Linear(in_features=2051, out_features=256, bias=True)
+        )
+        (4): ConcatSquashLinear(
+          (_layer): Linear(in_features=256, out_features=128, bias=True)
+          (_hyper_bias): Linear(in_features=2051, out_features=128, bias=False)
+          (_hyper_gate): Linear(in_features=2051, out_features=128, bias=True)
+        )
+        (5): ConcatSquashLinear(
+          (_layer): Linear(in_features=128, out_features=6, bias=True)
+          (_hyper_bias): Linear(in_features=2051, out_features=6, bias=False)
+          (_hyper_gate): Linear(in_features=2051, out_features=6, bias=True)
+        )
+      )
+    )
+    (var_sched): VarianceSchedule()
+  )
+)
+wandb: Currently logged in as: yidu (sairlab-yidu). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.14.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.13.10
+wandb: Run data is saved locally in /projects/academic/cwx/yidu/super_map/Super-map-Fusion-Head-Two-branch-Model/wandb/run-20230331_135504-0rb55hhx
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run OnlyPts-Original-TwoBranch-PointNet2-latenDim2048-inputDownsample2_2023_03_31_13h54m
+wandb: ⭐️ View project at https://wandb.ai/sairlab-yidu/Super-Map-Project-SmallDataset
+wandb: 🚀 View run at https://wandb.ai/sairlab-yidu/Super-Map-Project-SmallDataset/runs/0rb55hhx
+[2023-03-31 13:55:14,966::train::INFO] Start training...
+[2023-03-31 13:55:18,637::train::INFO] [Train] Iter 0001 | Loss 0.312114 | Grad 267.7040 
+[2023-03-31 13:55:18,926::train::INFO] [Train] Iter 0002 | Loss 2.483136 | Grad 462.1968 
+[2023-03-31 13:55:19,147::train::INFO] [Train] Iter 0003 | Loss 0.905516 | Grad 567.0649 
+[2023-03-31 13:55:19,455::train::INFO] [Train] Iter 0004 | Loss 0.496237 | Grad 316.3647 
+[2023-03-31 13:55:19,686::train::INFO] [Train] Iter 0005 | Loss 1.557117 | Grad 73.0632 
+[2023-03-31 13:55:19,907::train::INFO] [Train] Iter 0006 | Loss 0.666354 | Grad 295.6749 
+[2023-03-31 13:55:20,131::train::INFO] [Train] Iter 0007 | Loss 0.309846 | Grad 48.0827 
+[2023-03-31 13:55:20,353::train::INFO] [Train] Iter 0008 | Loss 0.767397 | Grad 28.6955 
+[2023-03-31 13:55:20,580::train::INFO] [Train] Iter 0009 | Loss 0.269054 | Grad 26.0290 
+[2023-03-31 13:55:20,800::train::INFO] [Train] Iter 0010 | Loss 0.186498 | Grad 59.1675 
+[2023-03-31 13:55:21,024::train::INFO] [Train] Iter 0011 | Loss 0.209496 | Grad 50.7178 
+[2023-03-31 13:55:21,255::train::INFO] [Train] Iter 0012 | Loss 0.529369 | Grad 35.2282 
+[2023-03-31 13:55:21,485::train::INFO] [Train] Iter 0013 | Loss 0.108146 | Grad 21.2344 
+[2023-03-31 13:55:21,706::train::INFO] [Train] Iter 0014 | Loss 0.366771 | Grad 5.3049 
+[2023-03-31 13:55:22,005::train::INFO] [Train] Iter 0015 | Loss 0.068212 | Grad 10.5980 
+[2023-03-31 13:55:22,227::train::INFO] [Train] Iter 0016 | Loss 0.332891 | Grad 4.9725 
+[2023-03-31 13:55:22,525::train::INFO] [Train] Iter 0017 | Loss 0.569635 | Grad 64.9413 
+[2023-03-31 13:55:22,746::train::INFO] [Train] Iter 0018 | Loss 1.002936 | Grad 41.3754 
+[2023-03-31 13:55:22,967::train::INFO] [Train] Iter 0019 | Loss 0.773084 | Grad 4.7863 
+[2023-03-31 13:55:23,196::train::INFO] [Train] Iter 0020 | Loss 1.453955 | Grad 388.2787 
+[2023-03-31 13:55:23,507::train::INFO] [Train] Iter 0021 | Loss 0.026690 | Grad 2.4229 
+[2023-03-31 13:55:23,807::train::INFO] [Train] Iter 0022 | Loss 0.096743 | Grad 28.9379 
+[2023-03-31 13:55:24,030::train::INFO] [Train] Iter 0023 | Loss 0.158496 | Grad 26.3878 
+[2023-03-31 13:55:24,252::train::INFO] [Train] Iter 0024 | Loss 0.784572 | Grad 6.8148 
+[2023-03-31 13:55:24,481::train::INFO] [Train] Iter 0025 | Loss 0.247473 | Grad 6.4872 
+[2023-03-31 13:55:24,700::train::INFO] [Train] Iter 0026 | Loss 0.741001 | Grad 6.0979 
+[2023-03-31 13:55:24,920::train::INFO] [Train] Iter 0027 | Loss 0.248158 | Grad 5.3587 
+[2023-03-31 13:55:25,141::train::INFO] [Train] Iter 0028 | Loss 0.249668 | Grad 9.0767 
+[2023-03-31 13:55:25,362::train::INFO] [Train] Iter 0029 | Loss 0.146600 | Grad 1.7253 
+[2023-03-31 13:55:25,581::train::INFO] [Train] Iter 0030 | Loss 0.362024 | Grad 11.3962 
+[2023-03-31 13:55:25,809::train::INFO] [Train] Iter 0031 | Loss 0.712522 | Grad 5.0565 
+[2023-03-31 13:55:26,028::train::INFO] [Train] Iter 0032 | Loss 0.095699 | Grad 12.7505 
+[2023-03-31 13:55:26,249::train::INFO] [Train] Iter 0033 | Loss 0.386311 | Grad 3.8323 
+[2023-03-31 13:55:26,475::train::INFO] [Train] Iter 0034 | Loss 0.804651 | Grad 4.5631 
+[2023-03-31 13:55:26,704::train::INFO] [Train] Iter 0035 | Loss 0.343942 | Grad 3.9749 
+[2023-03-31 13:55:26,935::train::INFO] [Train] Iter 0036 | Loss 0.879386 | Grad 14.7891 
+[2023-03-31 13:55:27,176::train::INFO] [Train] Iter 0037 | Loss 0.269998 | Grad 3.3903 
+[2023-03-31 13:55:27,407::train::INFO] [Train] Iter 0038 | Loss 0.058357 | Grad 3.2715 
+[2023-03-31 13:55:27,636::train::INFO] [Train] Iter 0039 | Loss 1.012928 | Grad 4.1518 
+[2023-03-31 13:55:27,876::train::INFO] [Train] Iter 0040 | Loss 0.206280 | Grad 4.5815 
+[2023-03-31 13:55:28,099::train::INFO] [Train] Iter 0041 | Loss 0.340611 | Grad 83.4027 
+[2023-03-31 13:55:28,323::train::INFO] [Train] Iter 0042 | Loss 0.187477 | Grad 5.8410 
+[2023-03-31 13:55:28,546::train::INFO] [Train] Iter 0043 | Loss 0.543790 | Grad 17.7886 
+[2023-03-31 13:55:28,767::train::INFO] [Train] Iter 0044 | Loss 0.842403 | Grad 17.8144 
+[2023-03-31 13:55:29,059::train::INFO] [Train] Iter 0045 | Loss 0.039266 | Grad 17.9426 
+[2023-03-31 13:55:29,291::train::INFO] [Train] Iter 0046 | Loss 0.041120 | Grad 28.1745 
+[2023-03-31 13:55:29,518::train::INFO] [Train] Iter 0047 | Loss 0.046551 | Grad 2.1496 
+[2023-03-31 13:55:29,779::train::INFO] [Train] Iter 0048 | Loss 0.554038 | Grad 1.4929 
+[2023-03-31 13:55:30,006::train::INFO] [Train] Iter 0049 | Loss 1.289799 | Grad 7.2997 
+[2023-03-31 13:55:30,226::train::INFO] [Train] Iter 0050 | Loss 0.597006 | Grad 36.0795 
+[2023-03-31 13:55:30,447::train::INFO] [Train] Iter 0051 | Loss 0.094183 | Grad 3.4662 
+[2023-03-31 13:55:30,667::train::INFO] [Train] Iter 0052 | Loss 0.228317 | Grad 9.4505 
+[2023-03-31 13:55:30,892::train::INFO] [Train] Iter 0053 | Loss 0.654140 | Grad 40.4363 
+[2023-03-31 13:55:31,112::train::INFO] [Train] Iter 0054 | Loss 0.420367 | Grad 20.0336 
+[2023-03-31 13:55:31,335::train::INFO] [Train] Iter 0055 | Loss 0.253188 | Grad 25.2868 
+[2023-03-31 13:55:31,555::train::INFO] [Train] Iter 0056 | Loss 0.872165 | Grad 85.9905 
+[2023-03-31 13:55:31,776::train::INFO] [Train] Iter 0057 | Loss 0.581790 | Grad 12.7468 
+[2023-03-31 13:55:32,041::train::INFO] [Train] Iter 0058 | Loss 0.347185 | Grad 7.0025 
+[2023-03-31 13:55:32,266::train::INFO] [Train] Iter 0059 | Loss 0.108079 | Grad 3.1434 
+[2023-03-31 13:55:32,486::train::INFO] [Train] Iter 0060 | Loss 0.453646 | Grad 9.6665 
+[2023-03-31 13:55:32,718::train::INFO] [Train] Iter 0061 | Loss 0.138124 | Grad 8.6577 
+[2023-03-31 13:55:32,940::train::INFO] [Train] Iter 0062 | Loss 0.582173 | Grad 8.5115 
+[2023-03-31 13:55:33,162::train::INFO] [Train] Iter 0063 | Loss 0.940363 | Grad 198.0442 
+[2023-03-31 13:55:33,386::train::INFO] [Train] Iter 0064 | Loss 0.713313 | Grad 7.2706 
+[2023-03-31 13:55:33,644::train::INFO] [Train] Iter 0065 | Loss 0.365785 | Grad 4.4674 
+[2023-03-31 13:55:33,869::train::INFO] [Train] Iter 0066 | Loss 0.433589 | Grad 55.5322 
+[2023-03-31 13:55:34,119::train::INFO] [Train] Iter 0067 | Loss 0.541822 | Grad 5.9894 
+[2023-03-31 13:55:34,377::train::INFO] [Train] Iter 0068 | Loss 0.074902 | Grad 13.0214 
+[2023-03-31 13:55:34,597::train::INFO] [Train] Iter 0069 | Loss 0.054163 | Grad 2.8694 

@@ -69,7 +69,7 @@ nvidia-smi
 cat simple_pointNet2_a100.script
 
 
-python train_ae.py --run_name 'Simple-Original-TwoBranch-PointNet2' --project_name 'Super-Map-Project-SmallDataset'
+python train_ae.py --run_name 'OnlyPts-Original-TwoBranch-PointNet2' --project_name 'Super-Map-Project-SmallDataset'
 
 
 ################################### End of SLRUM Script ###################################
