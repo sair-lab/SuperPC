@@ -52,7 +52,7 @@ parser.add_argument('--val_batch_size', type=int, default=1)# poits /20; 30 fram
 parser.add_argument('--rotate', type=eval, default=False, choices=[True, False])
 
 # Optimizer and scheduler
-parser.add_argument('--lr', type=float, default=1e-3)
+parser.add_argument('--lr', type=float, default=1e-4)
 parser.add_argument('--weight_decay', type=float, default=0)
 parser.add_argument('--max_grad_norm', type=float, default=10)
 parser.add_argument('--end_lr', type=float, default=1e-4)
