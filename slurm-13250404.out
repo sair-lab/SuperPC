@@ -37612,3 +37612,30 @@ wandb: 🚀 View run at https://wandb.ai/sairlab-yidu/Super-Map-Project-SmallDat
 [2023-03-31 13:44:31,117::train::INFO] [Train] Iter 36972 | Loss 0.070329 | Grad 0.0010 
 [2023-03-31 13:44:31,965::train::INFO] [Train] Iter 36973 | Loss 0.102177 | Grad 0.0009 
 [2023-03-31 13:44:32,820::train::INFO] [Train] Iter 36974 | Loss 0.285013 | Grad 0.0015 
+[2023-03-31 13:44:33,696::train::INFO] [Train] Iter 36975 | Loss 0.235536 | Grad 0.0013 
+[2023-03-31 13:44:34,531::train::INFO] [Train] Iter 36976 | Loss 0.347925 | Grad 0.0012 
+[2023-03-31 13:44:35,362::train::INFO] [Train] Iter 36977 | Loss 0.609826 | Grad 0.0024 
+[2023-03-31 13:44:36,217::train::INFO] [Train] Iter 36978 | Loss 0.103364 | Grad 0.0007 
+[2023-03-31 13:44:37,073::train::INFO] [Train] Iter 36979 | Loss 0.142004 | Grad 0.0009 
+[2023-03-31 13:44:37,933::train::INFO] [Train] Iter 36980 | Loss 0.150061 | Grad 0.0009 
+[2023-03-31 13:44:38,792::train::INFO] [Train] Iter 36981 | Loss 0.206403 | Grad 0.0008 
+[2023-03-31 13:44:39,638::train::INFO] [Train] Iter 36982 | Loss 0.083637 | Grad 0.0009 
+[2023-03-31 13:44:40,467::train::INFO] [Train] Iter 36983 | Loss 0.032986 | Grad 0.0007 
+[2023-03-31 13:44:41,317::train::INFO] [Train] Iter 36984 | Loss 0.056431 | Grad 0.0008 
+[2023-03-31 13:44:42,127::train::INFO] [Train] Iter 36985 | Loss 0.629787 | Grad 0.0024 
+[2023-03-31 13:44:42,963::train::INFO] [Train] Iter 36986 | Loss 0.223198 | Grad 0.0016 
+[2023-03-31 13:44:43,784::train::INFO] [Train] Iter 36987 | Loss 0.099955 | Grad 0.0007 
+[2023-03-31 13:44:44,619::train::INFO] [Train] Iter 36988 | Loss 0.727890 | Grad 0.0020 
+[2023-03-31 13:44:45,428::train::INFO] [Train] Iter 36989 | Loss 0.445608 | Grad 0.0019 
+[2023-03-31 13:44:46,266::train::INFO] [Train] Iter 36990 | Loss 0.134246 | Grad 0.0009 
+[2023-03-31 13:44:47,108::train::INFO] [Train] Iter 36991 | Loss 0.347817 | Grad 0.0013 
+[2023-03-31 13:44:47,947::train::INFO] [Train] Iter 36992 | Loss 0.087152 | Grad 0.0007 
+[2023-03-31 13:44:48,803::train::INFO] [Train] Iter 36993 | Loss 0.452785 | Grad 0.0016 
+[2023-03-31 13:44:49,632::train::INFO] [Train] Iter 36994 | Loss 0.028873 | Grad 0.0006 
+[2023-03-31 13:44:50,443::train::INFO] [Train] Iter 36995 | Loss 0.282080 | Grad 0.0013 
+[2023-03-31 13:44:51,281::train::INFO] [Train] Iter 36996 | Loss 0.074368 | Grad 0.0005 
+[2023-03-31 13:44:52,120::train::INFO] [Train] Iter 36997 | Loss 0.095059 | Grad 0.0007 
+[2023-03-31 13:44:52,950::train::INFO] [Train] Iter 36998 | Loss 0.358731 | Grad 0.0014 
+[2023-03-31 13:44:53,764::train::INFO] [Train] Iter 36999 | Loss 0.089874 | Grad 0.0008 
+[2023-03-31 13:44:54,559::train::INFO] [Train] Iter 37000 | Loss 0.507677 | Grad 0.0012 
+Validate:   0%|          | 0/36 [00:00<?, ?it/s]Validate:   3%|▎         | 1/36 [01:11<41:33, 71.24s/it]Validate:   6%|▌         | 2/36 [02:22<40:18, 71.13s/it]Validate:   8%|▊         | 3/36 [03:34<39:26, 71.72s/it]Validate:  11%|█         | 4/36 [04:46<38:12, 71.64s/it]slurmstepd: error: *** JOB 13250404 ON cpn-v09-34 CANCELLED AT 2023-03-31T13:49:44 ***
