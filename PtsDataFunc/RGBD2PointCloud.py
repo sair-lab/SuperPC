@@ -23,7 +23,7 @@ class RGBD2PtsCloud(object):
         self.pix2metre = 80.0
         self.frame = frame
 
-    def convert6(self):
+    def convert6(self, d_level=2):
         # Read a depth image (D) and RGB image (RGB)
         # img_depth_L = np.load('./PtsDataFunc/P000/depth_left/000' + str(self.frame) + '_left_depth.npy')
         img_depth_L = np.load('/Users/yidu/Desktop/UB_Works/Super_Map/Code/Datasets/P000/depth_left/000' + str(self.frame) + '_left_depth.npy')
@@ -53,7 +53,7 @@ class RGBD2PtsCloud(object):
         pcd_sameNum_list = np.linspace(0, PtsNum_ori, PtsNum_tar).round().astype(int)
         pcd_dense = pcd_dense.select_by_index(pcd_sameNum_list)
         # Point Cloud downsample
-        pcd_sparse = pcd_dense.uniform_down_sample(1)
+        pcd_sparse = pcd_dense.uniform_down_sample(d_level)
         # pcd_sparse = pcd_dense.voxel_down_sample(voxel_size=0.18)
         # Extra sparse
         # pcd_sparse = pcd_dense.uniform_down_sample(200)
