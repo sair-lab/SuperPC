@@ -38,9 +38,11 @@ parser.add_argument('--resume_iters', type=int, default=0)
 # Datasets and loaders
 parser.add_argument('--input_downsample', type=int, default=2)
 # parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/data/tartanair_allEnvs.hdf5') # Tartanair allEnvs
-parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_50000pts.hdf5')
+# parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_50000pts.hdf5') # Tartanair oneEnvs
+parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/data/tartanair_sofaRoom.hdf5') # Tartanair one scene sofa Room
 # parser.add_argument('--datasetImg_path', type=str, default='/home/jared/Large_datasets/TartanAir/data_image') # Tartanair allEnvs
-parser.add_argument('--datasetImg_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/PtsDataFunc/imagedata_small')
+# parser.add_argument('--datasetImg_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/PtsDataFunc/imagedata_small') # Tartanair oneEnvs
+parser.add_argument('--datasetImg_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/PtsDataFunc/imagedata_sofaRoom') # Tartanair one scene sofa Room
 parser.add_argument('--categories', type=str_list, default=['hospitalRGB'])
 parser.add_argument('--scale_mode', type=str, default='shape_unit')
 # parser.add_argument('--train_batch_size', type=int, default=128) # original
@@ -60,7 +62,7 @@ parser.add_argument('--sched_start_epoch', type=int, default=150*THOUSAND)
 parser.add_argument('--sched_end_epoch', type=int, default=300*THOUSAND)
 
 # wandb config
-parser.add_argument('--run_name', type=str, default='Original-TwoBranch')
+parser.add_argument('--run_name', type=str, default='Original-TwoBranch-PointNet2')
 parser.add_argument('--project_name', type=str, default='Super-Map-Project-SmallDataset')
 
 # Training
@@ -70,7 +72,7 @@ parser.add_argument('--log_root', type=str, default='./logs_ae')
 parser.add_argument('--device', type=str, default='cuda')
 # parser.add_argument('--max_iters', type=int, default=float('inf'))
 parser.add_argument('--max_iters', type=int, default=18000000)
-parser.add_argument('--val_freq', type=float, default=3)
+parser.add_argument('--val_freq', type=float, default=1000)
 parser.add_argument('--tag', type=str, default=None)
 parser.add_argument('--num_val_batches', type=int, default=-1)
 parser.add_argument('--num_inspect_batches', type=int, default=1)
