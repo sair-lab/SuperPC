@@ -1,5 +1,6 @@
 *
 !.gitignore
+!divide_PtsCloud.py
 
 P000
 imagedata_small 
