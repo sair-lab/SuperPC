@@ -5,8 +5,8 @@ import torch
 
 # Briefly view the processed point cloud data
 # frame = 328 # seasonsforest_winter: 328 - tree
-# frame = 198 # hospital - P000: 198 - room with sofa
-frame = 266 # hospital - P000: 286 - long way
+frame = 198 # hospital - P000: 198 - room with sofa
+# frame = 266 # hospital - P000: 286 - long way
 rgbd2PtsCloud = RGBD2PtsCloud.RGBD2PtsCloud(frame)
 pcd_dense, pcd_sparse = rgbd2PtsCloud.convert6()
 # rgbd2PtsCloud.view_image()
