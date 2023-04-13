@@ -25,11 +25,11 @@ class RGBD2PtsCloud(object):
 
     def convert6(self):
         # Read a depth image (D) and RGB image (RGB)
-        # img_depth_L = np.load('./PtsDataFunc/P000/depth_left/000' + str(self.frame) + '_left_depth.npy')
-        img_depth_L = np.load('/home/jared/Large_datasets/TartanAir/data_depth/seasonsforest_winter/Easy/P000/depth_left/000' + str(self.frame) + '_left_depth.npy')
+        img_depth_L = np.load('./P000/depth_left/000' + str(self.frame) + '_left_depth.npy')
+        # img_depth_L = np.load('/home/jared/Large_datasets/TartanAir/data_depth/seasonsforest_winter/Easy/P000/depth_left/000' + str(self.frame) + '_left_depth.npy')
         depth_raw = o3d.geometry.Image((img_depth_L))
-        # color_raw = o3d.io.read_image('./PtsDataFunc/P000/image_left/000' + str(self.frame) + '_left.png')
-        color_raw = o3d.io.read_image('/home/jared/Large_datasets/TartanAir/data_image/seasonsforest_winter/Easy/P000/image_left/000' + str(self.frame) + '_left.png')
+        color_raw = o3d.io.read_image('./P000/image_left/000' + str(self.frame) + '_left.png')
+        # color_raw = o3d.io.read_image('/home/jared/Large_datasets/TartanAir/data_image/seasonsforest_winter/Easy/P000/image_left/000' + str(self.frame) + '_left.png')
         # region Convert RGBD to Point Cloud (Left camera)
         rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
             color_raw, depth_raw, depth_scale=1, depth_trunc=10, convert_rgb_to_intensity=False)
@@ -53,7 +53,7 @@ class RGBD2PtsCloud(object):
         pcd_sameNum_list = np.linspace(0, PtsNum_ori, PtsNum_tar).round().astype(int)
         pcd_dense = pcd_dense.select_by_index(pcd_sameNum_list)
         # Point Cloud downsample
-        pcd_sparse = pcd_dense.uniform_down_sample(1)
+        pcd_sparse = pcd_dense.uniform_down_sample(4)
         # pcd_sparse = pcd_dense.voxel_down_sample(voxel_size=0.18)
         # Extra sparse
         # pcd_sparse = pcd_dense.uniform_down_sample(200)

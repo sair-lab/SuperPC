@@ -20,6 +20,7 @@ from evaluation import EMD_CD
 import matplotlib.pyplot as plt
 import datetime
 import os
+import open3d as o3d
 
 
 # Arguments
@@ -178,6 +179,36 @@ def train(it):
     # Load image
     batch_img = next(train_iter_img)
     img = batch_img['image'].to(args.device).float()
+
+
+    # Form the Generated point cloud
+    frame11 = x[0]
+    frame11 = np.array(frame11.cpu().numpy())
+    pcd1 = o3d.geometry.PointCloud()
+    pcd1.points = o3d.utility.Vector3dVector(frame11[:, :3])
+    pcd1.colors = o3d.utility.Vector3dVector(frame11[:, 3:])
+
+    vis_dense = o3d.visualization.VisualizerWithEditing()
+    vis_dense.create_window(window_name='Dense Point Cloud', width=1500, height=1350, left=0, top=0)
+    vis_dense.add_geometry(pcd1)
+
+    vis_sparse = o3d.visualization.VisualizerWithEditing()
+    vis_sparse.create_window(window_name='Sparse Point Cloud', width=1500, height=1350, left=1500, top=0)
+    vis_sparse.add_geometry(pcd1)
+
+    while True:
+        vis_dense.update_geometry(pcd1)
+        if not vis_dense.poll_events():
+            break
+        vis_dense.update_renderer()
+
+        vis_sparse.update_geometry(pcd1)
+        if not vis_sparse.poll_events():
+            break
+        vis_sparse.update_renderer()
+
+    vis_dense.destroy_window()
+    vis_sparse.destroy_window()
 
     # Reset grad and model state
     optimizer.zero_grad()

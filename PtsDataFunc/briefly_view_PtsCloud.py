@@ -5,12 +5,12 @@ import torch
 
 # Briefly view the processed point cloud data
 # frame = 328 # seasonsforest_winter: 328 - tree
-# frame = 198 # hospital - P000: 198 - room with sofa
-frame = 266 # hospital - P000: 286 - long way
+frame = 198 # hospital - P000: 198 - room with sofa
+# frame = 266 # hospital - P000: 286 - long way
 rgbd2PtsCloud = RGBD2PtsCloud.RGBD2PtsCloud(frame)
 pcd_dense, pcd_sparse = rgbd2PtsCloud.convert6()
 # rgbd2PtsCloud.view_image()
-# rgbd2PtsCloud.view_PtsCloud()
+rgbd2PtsCloud.view_PtsCloud()
 # print(pcd_sparse)
 # Save pcd file
 # o3d.io.write_point_cloud('./PtsDataFunc/P000/train/frame' + str(frame) + '.pcd', pcd_sparse, write_ascii=True, compressed=False, print_progress=False)
