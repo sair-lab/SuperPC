@@ -137,3 +137,7 @@ dmypy.json
 logs_ae/
 logs_gen/
 wandb/
+
+
+# slurm output
+*.out

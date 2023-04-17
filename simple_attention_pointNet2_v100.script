@@ -15,18 +15,18 @@
 
 ################################### Select your GPU ###################################
 ## Use snodes command to check their status first
-#SBATCH --gres=gpu:a100-pcie-40gb:1
-##SBATCH --gres=gpu:tesla_v100-pcie-32gb:1
-###SBATCH --gres=gpu:tesla_v100-pcie-16gb:1
+#SBATCH --gres=gpu:tesla_v100-pcie-32gb:1
+##SBATCH --gres=gpu:tesla_v100-pcie-16gb:1
+###SBATCH --gres=gpu:a100-pcie-40gb:1
 
 
 ################################### Set your memory ###################################
-#SBATCH --mem=40960
+#SBATCH --mem=32768
 # Memory per node specification is in MB. It is optional. 
 # The default limit is 3000MB per core.
 
 ################################### Set your job name ###################################
-#SBATCH --job-name="super_map_simple_attention_pointNet2_input_downsample_2_latent2048"
+#SBATCH --job-name="OnlyPts_super_map_simple_skip_pointNet2_input_downsample_2_latent2048"
 
 ## Set output name (not work very well right now)
 ### SBATCH --output= "result_$(date +"%Y_%m_%d_%k_%M_%S").out"
@@ -66,10 +66,10 @@ which pytest
 nvidia-smi
 
 
-cat simple_attention_pointNet2_a100.script
+cat simple_attention_pointNet2_v100.script
 
 
-python train_ae.py --run_name 'Simple-attention-TwoBranch-PointNet2' --project_name 'Super-Map-Project-SmallDataset'
+python train_ae.py --run_name 'OnlyPts-1e-4LR-2000ValRate-Simple-skip-TwoBranch-PointNet2' --project_name 'Super-Map-Project-SmallDataset' --lr 1e-4 --end_lr 1e-5
 
 
 ################################### End of SLRUM Script ###################################
