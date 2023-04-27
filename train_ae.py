@@ -39,11 +39,11 @@ parser.add_argument('--resume_iters', type=int, default=0)
 # Datasets and loaders
 parser.add_argument('--input_downsample', type=int, default=2)
 # parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/data/tartanair_allEnvs.hdf5') # Tartanair allEnvs
-# parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_50000pts.hdf5') # Tartanair oneEnvs
-parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/data/tartanair_sofaRoom.hdf5') # Tartanair one scene sofa Room
+parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/data/shapenet_oneTraj_50000pts.hdf5') # Tartanair oneEnvs
+# parser.add_argument('--dataset_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/data/tartanair_sofaRoom.hdf5') # Tartanair one scene sofa Room
 # parser.add_argument('--datasetImg_path', type=str, default='/home/jared/Large_datasets/TartanAir/data_image') # Tartanair allEnvs
-# parser.add_argument('--datasetImg_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/PtsDataFunc/imagedata_small') # Tartanair oneEnvs
-parser.add_argument('--datasetImg_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/PtsDataFunc/imagedata_sofaRoom') # Tartanair one scene sofa Room
+parser.add_argument('--datasetImg_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/PtsDataFunc/imagedata_small') # Tartanair oneEnvs
+# parser.add_argument('--datasetImg_path', type=str, default='/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model_twoBranchsModel/PtsDataFunc/imagedata_sofaRoom') # Tartanair one scene sofa Room
 parser.add_argument('--categories', type=str_list, default=['hospitalRGB'])
 parser.add_argument('--scale_mode', type=str, default='shape_unit')
 # parser.add_argument('--train_batch_size', type=int, default=128) # original

@@ -79,31 +79,33 @@ class PointNetEncoder(nn.Module):
         # v = 0
 
 
-        # -----------------Image Latent Code from ResNet50-----------------
-        img = self.model.conv1(img)    # ([8, 64, 240, 320])
-        img = self.model.bn1(img)      # ([8, 64, 240, 320])
-        img = self.model.relu(img)     # ([8, 64, 240, 320])
-        img = self.model.maxpool(img)  # ([8, 64, 120, 160])
-        img = self.model.layer1(img)   # ([8, 256, 120, 160])
-        img = self.model.layer2(img)   # ([8, 512, 60, 80])
-        img = self.model.layer3(img)   # ([8, 1024, 30, 40])
-        img = self.model.layer4(img)   # ([8, 2048, 15, 20])
-        img = self.model.avgpool(img)  # ([8, 2048, 1, 1])
-        img = img.view(img.size(0), -1)# ([8, 2048])
-        # m2 = self.model.fc(img)
-        # m2 = self.model.fc_bn(m2)
-        # m2 = F.relu(m2)
-        m2 = F.relu(self.model.fc_bn(self.model.fc(img))) # ([8, 64])
+        # # -----------------Image Latent Code from ResNet50-----------------
+        # img = self.model.conv1(img)    # ([8, 64, 240, 320])
+        # img = self.model.bn1(img)      # ([8, 64, 240, 320])
+        # img = self.model.relu(img)     # ([8, 64, 240, 320])
+        # img = self.model.maxpool(img)  # ([8, 64, 120, 160])
+        # img = self.model.layer1(img)   # ([8, 256, 120, 160])
+        # img = self.model.layer2(img)   # ([8, 512, 60, 80])
+        # img = self.model.layer3(img)   # ([8, 1024, 30, 40])
+        # img = self.model.layer4(img)   # ([8, 2048, 15, 20])
+        # img = self.model.avgpool(img)  # ([8, 2048, 1, 1])
+        # img = img.view(img.size(0), -1)# ([8, 2048])
+        # # m2 = self.model.fc(img)
+        # # m2 = self.model.fc_bn(m2)
+        # # m2 = F.relu(m2)
+        # m2 = F.relu(self.model.fc_bn(self.model.fc(img))) # ([8, 64])
 
 
         # ----------------------------------Fusion MLP----------------------------------
-        # MLP to combine the two code and make the dimensions equal to zdim
-        m = torch.cat([m1, m2], dim=-1) # (B, zdim+zdim)
-        m = self.fc1_con(m) # convert ResNet50 Latent code from 2*zdim to zdim
+        # # MLP to combine the two code and make the dimensions equal to zdim
+        # m = torch.cat([m1, m2], dim=-1) # (B, zdim+zdim)
+        # m = self.fc1_con(m) # convert ResNet50 Latent code from 2*zdim to zdim
 
-        # v = torch.cat([v, m2], dim=-1) # (B, zdim+zdim)
-        # v = self.fc1_con(v) # convert ResNet50 Latent code from 2*zdim to zdim
+        # # v = torch.cat([v, m2], dim=-1) # (B, zdim+zdim)
+        # # v = self.fc1_con(v) # convert ResNet50 Latent code from 2*zdim to zdim
+
         v = 0
+        m = m1
 
 
         # Returns both mean and logvariance, just ignore the latter in deteministic cases.
