@@ -6,6 +6,8 @@ import open3d as o3d
 
 # path = os.getcwd() + '/results/AE_Ours_hospitalRGB_1673560411'
 path = './results/Unet_TwoBranch_room'
+# path = '/home/jared/SAIR_Lab/Super-Map/Super-Map-Fusion-Head-Point-Based-Model/results/1800000iters_one_branch'
+
 data1 = np.load(path + '/out.npy')
 # depth_raw = o3d.geometry.Image((data))
 frame11 = data1[0, :]
