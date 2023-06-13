@@ -286,7 +286,7 @@ def validate_inspect(it):
 wandb.init(
     # set the wandb project where this run will be logged
     project = args.project_name,
-    name = args.run_name + '-latenDim' + str(args.latent_dim) + '-inputDownsample' + str(args.input_downsample) + '_' + datetime.datetime.now().strftime("%Y_%m_%d_%Hh%Mm"),
+    name = args.run_name + '-lr' + str(args.lr) + '-latenDim' + str(args.latent_dim) + '-inputDownsample' + str(args.input_downsample) + '_' + datetime.datetime.now().strftime("%Y_%m_%d_%Hh%Mm"),
     
     # track hyperparameters and run metadata
     config = {

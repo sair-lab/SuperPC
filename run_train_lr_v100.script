@@ -1,0 +1,74 @@
+#!/bin/sh
+################################### Start of SLRUM Script ###################################
+
+################################### Select your cluster ###################################
+###SBATCH --cluster=ub-hpc
+#SBATCH --cluster=faculty
+
+## Select your partition
+#SBATCH --partition=scavenger --qos=scavenger
+
+################################### Set your running time ###################################
+#SBATCH --time=48:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=8
+
+################################### Select your GPU ###################################
+## Use snodes command to check their status first
+#SBATCH --gres=gpu:tesla_v100-pcie-32gb:1
+##SBATCH --gres=gpu:tesla_v100-pcie-16gb:1
+###SBATCH --gres=gpu:a100-pcie-40gb:1
+
+################################### Set your memory ###################################
+#SBATCH --mem=32768
+# Memory per node specification is in MB. It is optional. 
+# The default limit is 3000MB per core.
+
+################################### Set your job name ###################################
+#SBATCH --job-name="super_map_train_lr"
+
+## Set output name (not work very well right now)
+### SBATCH --output= "result_$(date +"%Y_%m_%d_%k_%M_%S").out"
+
+############################ Set the email to receive email #############################
+#SBATCH --mail-user=yidu@buffalo.edu
+#SBATCH --mail-type=ALL
+##SBATCH --requeue
+#Specifies that the job will be requeued after a node failure.
+#The default is that the job will not be requeued.
+
+
+################### Beginning of your scipt, it is written with shell ####################
+
+echo "SLURM_JOBID="$SLURM_JOBID
+echo "SLURM_TIME="$(date +"%Y_%m_%d_%k_%M_%S")
+
+echo "SLURM_JOB_NODELIST"=$SLURM_JOB_NODELIST
+echo "SLURM_NNODES"=$SLURM_NNODES
+echo "SLURMTMPDIR="$SLURMTMPDIR
+
+echo "working directory = "$SLURM_SUBMIT_DIR
+
+
+# module use /projects/academic/cwx/modulefiles
+# module load python/my-python-3
+source ~/.bashrc
+conda activate supermap
+
+## List the module your are using
+module list
+ulimit -s unlimited
+
+which python
+which pytest
+
+nvidia-smi
+
+
+cat run_train_input_downsample_2_latent256_v100.script
+
+
+python train_ae.py --dataset_path '/user/yidu/projects/yidu/super_map/super_map_point_based_one_branch/data/shapenet_oneTraj_50000pts.hdf5' --lr 6e-7 --end_lr 1e-7 --latent_dim 256 --input_downsample 2 --run_name 'TwoBranch' --project_name 'Super-Map-Project-SmallDataset'
+
+
+################################### End of SLRUM Script ###################################
