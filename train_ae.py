@@ -224,7 +224,7 @@ def validate_loss(it):
         with torch.no_grad():
             model.eval()
             code = model.encode(ref_input, ref_img)
-            recons = model.decode(code, ref.size(1), flexibility=args.flexibility)
+            recons = model.decode(ref_input, code, ref.size(1), flexibility=args.flexibility)
         all_refs.append(ref * scale + shift)
         all_recons.append(recons * scale + shift)
 
@@ -263,7 +263,7 @@ def validate_inspect(it):
 
         model.eval()
         code = model.encode(x_input, img)
-        recons = model.decode(code, x.size(1), flexibility=args.flexibility).detach()
+        recons = model.decode(x_input, code, x.size(1), flexibility=args.flexibility).detach()
         # Remap the generated pointcloud xyz and RGB to original map
         recons = recons * scale + shift
         vertices = recons[:args.num_inspect_pointclouds, :, :3]
@@ -286,7 +286,7 @@ def validate_inspect(it):
 wandb.init(
     # set the wandb project where this run will be logged
     project = args.project_name,
-    name = args.run_name + '-lr' + str(args.lr) + '-latenDim' + str(args.latent_dim) + '-inputDownsample' + str(args.input_downsample) + '_' + datetime.datetime.now().strftime("%Y_%m_%d_%Hh%Mm"),
+    name = args.run_name + '-latenDim' + str(args.latent_dim) + '-inputDownsample' + str(args.input_downsample) + '_' + datetime.datetime.now().strftime("%Y_%m_%d_%Hh%Mm"),
     
     # track hyperparameters and run metadata
     config = {

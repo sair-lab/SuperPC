@@ -87,7 +87,7 @@ for i, batch in enumerate(tqdm(test_loader)):
     model.eval()
     with torch.no_grad():
         code = model.encode(ref, img)
-        recons = model.decode(code, ref.size(1), flexibility=ckpt['args'].flexibility).detach()
+        recons = model.decode(x_in=ref_input, code, ref.size(1), flexibility=ckpt['args'].flexibility).detach()
 
     ref = ref * scale + shift
     recons = recons * scale + shift

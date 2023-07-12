@@ -8,22 +8,32 @@
 ## Select your partition
 #SBATCH --partition=scavenger --qos=scavenger
 
+
 ################################### Set your running time ###################################
 #SBATCH --time=48:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=8
+#SBATCH --ntasks-per-node=4
+
 
 ################################### Select your GPU ###################################
 ## Use snodes command to check their status first
-#SBATCH --gres=gpu:tesla_v100-pcie-32gb:1
-##SBATCH --gres=gpu:tesla_v100-pcie-16gb:1
-###SBATCH --gres=gpu:a100-pcie-40gb:1
+###SBATCH --gres=gpu:tesla_v100-pcie-32gb:2
+###SBATCH --gres=gpu:tesla_v100-pcie-16gb:2
+###SBATCH --gres=gpu:a100-pcie-40gb:2
+#SBATCH --gres=gpu:a100-pcie-80gb:2
+
+### just give my job a single gpu
+#SBATCH --gres=gpu:1
+### give me a node which has the A100 gpus in it
+#​SBATCH --constraint=A100 
+###​SBATCH --constraint=V100
 
 
 ################################### Set your memory ###################################
-#SBATCH --mem=32768
+#SBATCH --mem=65536
 # Memory per node specification is in MB. It is optional. 
 # The default limit is 3000MB per core.
+
 
 ################################### Set your job name ###################################
 #SBATCH --job-name="OnlyPts_super_map_train_input_downsample_2"
@@ -31,12 +41,14 @@
 ## Set output name (not work very well right now)
 ### SBATCH --output= "result_$(date +"%Y_%m_%d_%k_%M_%S").out"
 
+
 ############################ Set the email to receive email #############################
 #SBATCH --mail-user=yidu@buffalo.edu
 #SBATCH --mail-type=ALL
 ##SBATCH --requeue
 #Specifies that the job will be requeued after a node failure.
 #The default is that the job will not be requeued.
+
 
 
 ################### Beginning of your scipt, it is written with shell ####################
@@ -66,10 +78,10 @@ which pytest
 nvidia-smi
 
 
-cat run_train_v100.script
+cat run_train_LargeDataTest_a100.script
 
 
-python train_ae.py --dataset_path '/user/yidu/projects/yidu/super_map/super_map_point_based_one_branch/data/shapenet_oneTraj_50000pts.hdf5' --latent_dim 1024 --input_downsample 2 --run_name 'Reconstruct-test1' --project_name 'Super-Map-Project-SmallDataset'
+python train_ae.py --dataset_path '/user/yidu/projects/yidu/super_map/super_map_point_based_one_branch/data/shapenet_oneTraj_50000pts.hdf5' --latent_dim 8 --input_downsample 2 --run_name 'Reconstruct-test1' --project_name 'Super-Map-Project-SmallDataset'
 
 
 ################################### End of SLRUM Script ###################################

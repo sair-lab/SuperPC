@@ -71,8 +71,8 @@ class AutoEncoder(Module):
         code, _ = self.encoder(x, img)
         return code
 
-    def decode(self, code, num_points, flexibility=0.0, ret_traj=False):
-        return self.diffusion.sample(num_points, code, flexibility=flexibility, ret_traj=ret_traj)
+    def decode(self, x_in, code, num_points, flexibility=0.0, ret_traj=False):
+        return self.diffusion.sample(x_in, num_points, code, flexibility=flexibility, ret_traj=ret_traj)
 
     def get_loss(self, x, img):
         PtsNum_ori = x.size(dim=1)
@@ -82,5 +82,5 @@ class AutoEncoder(Module):
        
         code = self.encode(x_input, img)
         # code = self.encode(x, img)
-        loss = self.diffusion.get_loss(x, code)
+        loss = self.diffusion.get_loss(x_input, x, code)
         return loss
