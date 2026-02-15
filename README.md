@@ -1,10 +1,8 @@
-# Super Map - Point-based Fusion Head 
-## - based on "Diffusion Probabilistic Models for 3D Point Cloud Generation"
-<img src="teaser.png" alt="teaser" width="50%" />
+# SuperPC: A Single Diffusion Model for Unified Point Cloud Processing
 
-[[Paper](https://arxiv.org/abs/2103.01458)] [[Code](https://github.com/luost26/diffusion-point-cloud)] [[Demo](https://huggingface.co/spaces/SerdarHelli/diffusion-point-cloud) Created by [SerdarHELLI](https://github.com/SerdarHelli)]
+[[Paper](https://arxiv.org/abs/2503.14558)] [[Code](https://github.com/sair-lab/SuperPC)] [[Homepage](https://sairlab.org/superpc/) 
 
-The official code repository for our CVPR 2021 paper "Diffusion Probabilistic Models for 3D Point Cloud Generation".
+The official code repository for the CVPR 2025 paper "SuperPC: A Single Diffusion Model for Unified Point Cloud Processing".
 
 ## Installation
 
@@ -77,14 +75,19 @@ Use ./plot_point_cloud.py file to visualize the outputs.
 python plot_point_cloud.py --outputDir AE_Ours_hospitalRGB_********** --frameNum **
 ```
 
-## Basic Code Reference
+
+## Acknowledgement
+The codebase is built upon: [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine), [PCUP](https://github.com/Baty2023/PDANS), [DifussionPC](https://github.com/luost26/diffusion-point-cloud). We appreciate the authors' excellent work.
+
+
+## Reference
 
 ```
-@inproceedings{luo2021diffusion,
-  author = {Luo, Shitong and Hu, Wei},
-  title = {Diffusion Probabilistic Models for 3D Point Cloud Generation},
-  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-  month = {June},
-  year = {2021}
+@inproceedings{du2025superpc,
+  title={SuperPC: a single diffusion model for point cloud completion, upsampling, denoising, and colorization},
+  author={Du, Yi and Zhao, Zhipeng and Su, Shaoshu and Golluri, Sharath and Zheng, Haoze and Yao, Runmao and Wang, Chen},
+  booktitle={Proceedings of the Computer Vision and Pattern Recognition Conference},
+  pages={16953--16964},
+  year={2025}
 }
 ```
