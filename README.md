@@ -1,83 +1,163 @@
 # SuperPC: A Single Diffusion Model for Unified Point Cloud Processing
 
-[[Paper](https://arxiv.org/abs/2503.14558)] [[Code](https://github.com/sair-lab/SuperPC)] [[Homepage](https://sairlab.org/superpc/) 
+[[Paper](https://arxiv.org/abs/2503.14558)] [[Code](https://github.com/sair-lab/SuperPC)] [[Homepage](https://sairlab.org/superpc/)] 
 
 The official code repository for the CVPR 2025 paper "SuperPC: A Single Diffusion Model for Unified Point Cloud Processing".
 
+### News
+1. Added dataset preparation code and instructions
+2. Uploaded the pretrained weights
+3. Added evaluation and single-sample testing code
+
+### Future Plans
+- [ ] Add detailed training pipeline
+- [ ] Possibly add prepared datasets if permission is granted by the original dataset providers
+- [ ] Add the flow-matching based training pipeline and pretrained weights
+
 ## Installation
 
-**[Option 1]** Install via conda environment YAML file (**CUDA 11.6**).
-
-```bash
-# Create the environment
-conda env create -f env.yml
-# Activate the environment
-conda activate dpm-pc-gen
+Run the setup script:
+```
+./setup_env.sh
 ```
 
-Our model only depends on the following commonly used packages, all of which can be installed via conda.
 
-| Package      | Version                          |
-| ------------ | -------------------------------- |
-| PyTorch      | ≥ 1.6.0                          |
-| h5py         | *not specified* (we used 4.61.1) |
-| tqdm         | *not specified*                  |
-| tensorboard  | *not specified* (we used 2.5.0)  |
-| numpy        | *not specified* (we used 1.20.2) |
-| scipy        | *not specified* (we used 1.6.2)  |
-| scikit-learn | *not specified* (we used 0.24.2) |
-| open3d | *not specified* (we used 0.15.2) |
-
-## About the EMD Metric
-
-We have removed the EMD module due to GPU compatability issues. The legacy code can be found on the `emd-cd` branch.
-
-If you have to compute the EMD score or compare our model with others, we strongly advise you to use your own code to compute the metrics. The generation and decoding results will be saved to the `results` folder after each test run.
-
-## Datasets
-1. [TartanAir Datasets](https://github.com/castacks/tartanair_tools) - [[Separate Sub Datasets](https://github.com/castacks/tartanair_tools/blob/master/download_training_zipfiles.txt)]
+## Datasets Preparation
+Follow the [detailed dataset preparation guide](datasets_preparation/README.md) to download the three raw datasets and prepare ground-truth point clouds and images.
+1. [ShapeNet dataset](https://shapenet.org/)
+2. [TartanAir dataset](https://github.com/castacks/tartanair_tools) - [separate sub-dataset list](https://github.com/castacks/tartanair_tools/blob/master/download_training_zipfiles.txt)
+3. [KITTI-360 dataset](https://www.cvlibs.net/datasets/kitti-360/user_login.php)
 
 
-## Process and adjust the data
-Use the scripts (`RGB2PointCloud.py`, `briefly_view_PtsCloud.py`, and `PtsCloud_process_save_as_hdf5.py`) in the `PtsDataFunc` folder  
+## Model Zoo
+Download all pretrained weights from:
+https://drive.google.com/drive/folders/1FrQtm8LBVrbdRT4Xs87rIZpJ9nYaTqcG?usp=drive_link
 
 
-## Training
+
+
+## Evaluation and Testing (Combined Tasks)
+
+### 1. ShapeNet Dataset
+Use `test_superpc.py` for single-sample or split-based testing with optional output saving.
+
+[Single sample] (assuming you have already prepared the ShapeNet dataset):
+
+airplane: /02691156/10aa040f470500c6a66ef8df4909ded9
+
 
 ```bash
-# Train the model (default: in hospital environment)
-python train_ae.py 
+python test_superpc.py \
+  --dataset shapenet \
+  --cat-id 02691156 \
+  --model-id 10155655850468db78d106ce0a280f87 \
+  --mode easy \
+  --ckpt_path /path/to/your_checkpoint.pth \
+  --use_vision_conditioning true \
+  --vision_image_dir /path/to/shapenet/render/images \
+  --num_points 2048 \
+  --target_num_points 8192 \
+  --use_input_scout_fill true \
+  --seed 21 \
+  --sampling_steps 25 \
+  --save_pc true
 ```
 
-You may specify the value of arguments. Please find the available arguments in the script. 
-
-Note that `--categories` can take `all` (use all the categories in the dataset), `airplane`, `chair` (use a single category), or `airplane,chair` (use multiple categories, separated by commas). {!!Only `hospital` and `hospitalRGB` available now!!}
-
-## Testing
-1. Enter the specific folder (`AE_****_**_**__**_**_**`) and `.pt` file name (`ckpt_********_******.pt`) in the `logs_ae` folder as part of the path below: 
+[Whole ShapeNet test split] (omit `--cat-id` and `--model-id`):
 
 ```bash
-# Test the model in hospital environment
-python test_ae.py --ckpt ./logs_ae/AE_****_**_**__**_**_**/ckpt_********_******.pt --categories hospitalRGB
+python test_superpc.py \
+  --dataset shapenet \
+  --ckpt_path /path/to/your_checkpoint.pth \
+  --use_vision_conditioning true \
+  --vision_image_dir /path/to/shapenet/render/images \
+  --num_points 2048 \
+  --target_num_points 8192 \
+  --use_input_scout_fill true \
+  --seed 21 \
+  --sampling_steps 25 \
+  --save_pc true
 ```
 
-## Plots of loss and other information
-Use `tensorboard` (recommand) to view or check the `plot_save` folder.
 
-## Visualization of the output
-Use ./plot_point_cloud.py file to visualize the outputs.
+### 2. TartanAir Dataset
+Use `test_superpc.py` for single-sample or split-based testing with optional output saving.
 
-1. Enter the specific folder (`AE_Ours_hospitalRGB_**********`) in the `results` folder as part of the path below: 
-2. Enter the test frame (`**`) you want to view (defual is `18`; from 0 to the max test frame you used in the data processing, eg.: 0, 2, ..., 10, 11, ...)
+[Single sample] (assuming you have already prepared the TartanAir dataset):
+
+Single TartanAir sample by metadata path:
 
 ```bash
-# View the output 
-python plot_point_cloud.py --outputDir AE_Ours_hospitalRGB_********** --frameNum **
+python test_superpc.py \
+  --dataset tartanair \
+  --tartanair_root /data_sair/tartanair_maps \
+  --metadata_path /path/to/tartanair_maps/hospital/Easy/P000/000000/metadata.json \
+  --ckpt_path /path/to/your_checkpoint.pth \
+  --use_vision_conditioning true \
+  --num_points 11520 \
+  --target_num_points 46080 \
+  --seed 21 \
+  --sampling_steps 25 \
+  --save_pc true
+```
+
+TartanAir split testing (`--eval_split`: `train`, `val`, `test`, or `all`):
+
+```bash
+python test_superpc.py \
+  --dataset tartanair \
+  --tartanair_root /data_sair/tartanair_maps \
+  --eval_split test \
+  --ckpt_path /path/to/your_checkpoint.pth \
+  --use_vision_conditioning true \
+  --num_points 11520 \
+  --target_num_points 46080 \
+  --seed 21 \
+  --sampling_steps 25 \
+  --save_pc true
+```
+
+### 3. KITTI-360 Dataset
+Use `test_superpc.py` for single-sample or split-based testing with optional output saving.
+
+[Single sample] (assuming you have already prepared the KITTI-360 dataset):
+
+Single KITTI-360 sample by metadata path:
+
+```bash
+python test_superpc.py \
+  --dataset kitti360 \
+  --kitti360_root /path/to/kitti360_maps/submaps \
+  --metadata_path /path/to/kitti360_maps/submaps/2013_05_28_drive_0000_sync/image_00/0000000090/metadata.json \
+  --ckpt_path /path/to/your_checkpoint.pth \
+  --use_vision_conditioning true \
+  --num_points 11520 \
+  --target_num_points 46080 \
+  --use_input_scout_fill true \
+  --seed 21 \
+  --sampling_steps 25 \
+  --save_pc true
+```
+
+KITTI-360 split testing (`--eval_split=test` maps to the val split because KITTI-360 currently uses train/val partitioning):
+
+```bash
+python test_superpc.py \
+  --dataset kitti360 \
+  --kitti360_root /path/to/kitti360_maps/submaps \
+  --eval_split test \
+  --ckpt_path /path/to/your_checkpoint.pth \
+  --use_vision_conditioning true \
+  --num_points 11520 \
+  --target_num_points 46080 \
+  --seed 21 \
+  --sampling_steps 25 \
+  --save_pc true
 ```
 
 
 ## Acknowledgement
-The codebase is built upon: [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine), [PCUP](https://github.com/Baty2023/PDANS), [DifussionPC](https://github.com/luost26/diffusion-point-cloud). We appreciate the authors' excellent work.
+The codebase is built upon: [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine), [PUFM](https://github.com/Holmes-Alan/PUFM), [DiffusionPC](https://github.com/luost26/diffusion-point-cloud), and [DCD](https://github.com/wutong16/Density_aware_Chamfer_Distance). We appreciate the authors' excellent work.
 
 
 ## Reference
